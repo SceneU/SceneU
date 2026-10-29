@@ -128,7 +128,23 @@
   function sbHtml(mode, left) {
     return '<div class="sb ' + mode + '"><span>' + esc(left || C.TIME) + '</span><span class="r">' + I.signal + I.wifi + I.batt + '</span></div>';
   }
+  /* 사진 이름이 조금 달라도(대문자 .JPG, .jpeg, .png, .HEIC, .jpg.jpg 처럼 확장자가 두 번) 찾아서 보여줘요 */
+  var EXT1 = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.heic', '.HEIC'];
+  var EXT2 = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.heic', '.HEIC'];
+  function variants(src) {
+    var m = String(src).match(/^(.*?)(\.[A-Za-z0-9]+)$/);
+    if (!m) { return [src]; }
+    var out = [src], seen = {};
+    seen[src] = 1;
+    function add(v) { if (!seen[v]) { seen[v] = 1; out.push(v); } }
+    EXT1.forEach(function (e) { add(m[1] + e); });
+    EXT2.forEach(function (e) { add(m[1] + m[2] + e); });
+    return out;
+  }
   function setBg(div, srcs) {
+    var all = [];
+    srcs.forEach(function (s) { variants(s).forEach(function (v) { all.push(v); }); });
+    srcs = all;
     (function next(i) {
       if (i >= srcs.length) { return; }
       var im = new Image();
@@ -153,6 +169,11 @@
   phone.addEventListener('error', function (e) {
     var t = e.target;
     if (!t || t.tagName !== 'IMG') { return; }
+    var orig = t.getAttribute('data-orig') || t.getAttribute('src') || '';
+    t.setAttribute('data-orig', orig);
+    var vs = variants(orig);
+    var i = parseInt(t.getAttribute('data-vi') || '0', 10) + 1;
+    if (i < vs.length) { t.setAttribute('data-vi', String(i)); t.src = vs[i]; return; }
     if (t.getAttribute('data-rm')) { t.remove(); return; }
     var d = document.createElement('div');
     d.className = 'ph';
@@ -206,15 +227,19 @@
       '<button class="go" id="goBtn" type="button" disabled>시작</button></div></section>');
     phone.appendChild(s);
     (function () {
-      var src = (C.IMG && C.IMG.startBg) || './start-bg.jpg';
-      var im = new Image();
-      im.onload = function () {
-        s.style.backgroundImage = 'url("' + src + '")';
-        s.style.backgroundSize = 'cover';
-        s.style.backgroundRepeat = 'no-repeat';
-        s.style.backgroundPosition = 'center';
-      };
-      im.src = src;
+      var list = variants((C.IMG && C.IMG.startBg) || './start-bg.jpg');
+      (function next(i) {
+        if (i >= list.length) { return; }
+        var im = new Image();
+        im.onload = function () {
+          s.style.backgroundImage = 'url("' + list[i] + '")';
+          s.style.backgroundSize = 'cover';
+          s.style.backgroundRepeat = 'no-repeat';
+          s.style.backgroundPosition = 'center';
+        };
+        im.onerror = function () { next(i + 1); };
+        im.src = list[i];
+      })(0);
     })();
     var inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
     function clean() {
