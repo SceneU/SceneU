@@ -11,14 +11,24 @@
   var LIVE_DMS = [
     { id: "d11", name: "user_2048173", handle: "user_2048173", time: "08:00", followers: 0, following: 1, posts: 0, msgs: ["방금 또 올라왔어요 보셨어요?"] },
     { id: "d12", name: "p5517302",     handle: "p5517302",     time: "08:00", followers: 1, following: 2, posts: 0, msgs: ["입장 안 내시나요?"] },
-    { id: "d13", name: "user_8830416", handle: "user_8830416", time: "08:01", followers: 0, following: 3, posts: 0, msgs: ["팬들 다 기다리는데 말 한마디는 해야죠"] },
-    { id: "d14", name: "r_2290745",    handle: "r_2290745",    time: "08:01", followers: 2, following: 4, posts: 0, msgs: ["{NAME}님 계정 지우면 더 이상해 보여요"] },
-    { id: "d15", name: "user61930274", handle: "user61930274", time: "08:02", followers: 0, following: 2, posts: 0, msgs: ["스크린샷 이미 다 저장돼 있어요 ㅋㅋ"] },
-    { id: "d16", name: "t_7041829",    handle: "t_7041829",    time: "08:02", followers: 1, following: 1, posts: 0, msgs: ["병신"] }
+    { id: "d13", name: "user_8830416", handle: "user_8830416", time: "08:00", followers: 0, following: 3, posts: 0, msgs: ["팬들 다 기다리는데 말 한마디는 해야죠"] },
+    { id: "d14", name: "r_2290745",    handle: "r_2290745",    time: "08:00", followers: 2, following: 4, posts: 0, msgs: ["{NAME}님 계정 지우면 더 이상해 보여요"] },
+    { id: "d15", name: "user61930274", handle: "user61930274", time: "08:00", followers: 0, following: 2, posts: 0, msgs: ["스크린샷 이미 다 저장돼 있어요 ㅋㅋ"] },
+    { id: "d16", name: "t_7041829",    handle: "t_7041829",    time: "08:00", followers: 1, following: 1, posts: 0, msgs: ["읽씹이네 ㅋㅋ"] }
   ];
   if (!C.DMS.some(function (d) { return String(d.time) >= '08:00'; })) { C.DMS = C.DMS.concat(LIVE_DMS); }
   var DM_PRE = 0;
   while (DM_PRE < C.DMS.length && String(C.DMS[DM_PRE].time) < '08:00') { DM_PRE++; }
+  /* 폰 안의 시간: config 의 TIME(예: 8:00)에서 시작해서 실제 시간처럼 1분에 1분씩 흘러요 */
+  var CLOCK0 = Date.now();
+  var CLOCK_BASE = (function () {
+    var m = String(C.TIME || '8:00').match(/(\d+):(\d+)/);
+    return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : 480;
+  })();
+  function clockMin() { return (CLOCK_BASE + Math.floor((Date.now() - CLOCK0) / 60000)) % 1440; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function clockStr() { var t = clockMin(); return Math.floor(t / 60) + ':' + pad2(t % 60); }
+  function clockHHMM() { var t = clockMin(); return pad2(Math.floor(t / 60)) + ':' + pad2(t % 60); }
   var phone = document.getElementById('phone');
 
   /* ---------- 유틸 ---------- */
@@ -142,7 +152,7 @@
 
   /* ---------- 공통 요소 ---------- */
   function sbHtml(mode, left) {
-    return '<div class="sb ' + mode + '"><span>' + esc(left || C.TIME) + '</span><span class="r">' + I.signal + I.wifi + I.batt + '</span></div>';
+    return '<div class="sb ' + mode + '"">' + (left ? '<span>' + esc(left) + '</span>' : '<span class="clk">' + clockStr() + '</span>') + '<span class="r">' + I.signal + I.wifi + I.batt + '</span></div>';
   }
   /* 사진 이름이 조금 달라도(대문자 .JPG, .jpeg, .png, .HEIC, .jpg.jpg 처럼 확장자가 두 번) 찾아서 보여줘요 */
   var EXT1 = ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG', '.heic', '.HEIC'];
@@ -320,7 +330,8 @@
     passBuf = ''; passOn = false;
     setHB('light');
     var notifs = preGroupHtml() + xFollowHtml() + C.NOTIFS.map(function (n) {
-      return '<div class="notif"><div class="ic">' + ICO.phone + '</div><div class="tx"><b>' + esc(n.name) + '</b><span>' + esc(n.text) + '</span></div><div class="tm">' + esc(n.time) + '</div></div>';
+      var mm = String(n.time).match(/(\d+)\s*분/), off = n.time === '방금' ? 0 : (mm ? parseInt(mm[1], 10) : -1);
+      return '<div class="notif"><div class="ic">' + ICO.phone + '</div><div class="tx"><b>' + esc(n.name) + '</b><span>' + esc(n.text) + '</span></div><div class="tm"' + (off >= 0 ? ' data-at="' + (clockMin() - off) + '"' : '') + '>' + esc(n.time) + '</div></div>';
     }).join('');
     var keys = '';
     [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (d) {
@@ -329,7 +340,7 @@
     keys += '<div class="key empty"></div><button class="key" type="button" data-k="0"><b>0</b><small></small></button><div class="key empty"></div>';
     var l = el('<section class="layer lock" id="lock">' +
       '<div class="bgimg bg-lock" id="lockBg"></div><div class="shade"></div>' + sbHtml('light', C.CARRIER) +
-      '<div class="lk-top">' + I.lock + '<div class="lk-date">' + esc(C.DATE) + '</div><div class="lk-time">' + esc(C.TIME) + '</div></div>' +
+      '<div class="lk-top">' + I.lock + '<div class="lk-date">' + esc(C.DATE) + '</div><div class="lk-time clk">' + clockStr() + '</div></div>' +
       '<div class="notifs">' + notifs + '</div>' +
       '<div class="lk-btn l">' + I.flash + '</div><div class="lk-btn r">' + I.camera + '</div>' +
       '<div class="lk-hint">' + I.chevUp + '위로 쓸어올려 잠금 해제</div><div class="lk-hit" id="lkHit"></div>' +
@@ -386,7 +397,7 @@
     lock.classList.add('fade-out');
     current = 'home';
     setTimeout(function () { lock.remove(); L.lock = null; }, 360);
-    if (pendingDm) { var pid = pendingDm; pendingDm = null; setTimeout(function () { goDm(pid); }, 800); }
+    if (pendingDm) { var pid = pendingDm; pendingDm = null; goDm(pid); }
   }
   document.addEventListener('keydown', function (e) {
     if (current === 'lock' && passOn && /^[0-9]$/.test(e.key)) { pressKey(e.key); }
@@ -425,7 +436,7 @@
      앱 열기/닫기
      ========================================================= */
   var IMPL = {};
-  function openApp(id, fromEl) {
+  function openApp(id, fromEl, opts) {
     if (current !== 'home') { return; }
     if (id === 'youtube') {
       try { window.open(C.YOUTUBE_URL, '_blank', 'noopener'); } catch (e) {}
@@ -439,21 +450,26 @@
       layer.style.transformOrigin = (r.left + r.width / 2 - pr.left) + 'px ' + (r.top + r.height / 2 - pr.top) + 'px';
     }
     phone.insertBefore(layer, hbHit);
-    layer.classList.add('opening');
-    layer.addEventListener('animationend', function f() { layer.classList.remove('opening'); layer.removeEventListener('animationend', f); });
+    if (!(opts && opts.instant)) {
+      layer.classList.add('opening');
+      layer.addEventListener('animationend', function f() { layer.classList.remove('opening'); layer.removeEventListener('animationend', f); });
+    }
     current = 'app'; curApp = id;
     L.app = layer;
     appCleanup = IMPL[id](layer) || null;
   }
-  function closeApp() {
+  function closeApp(instant) {
     if (current !== 'app' || !L.app) { return; }
     var layer = L.app;
     current = 'home';
     if (appCleanup) { try { appCleanup(); } catch (e) {} appCleanup = null; }
     layer.classList.remove('opening');
-    layer.classList.add('closing');
     setHB('light');
-    setTimeout(function () { layer.remove(); }, 290);
+    if (instant === true) { layer.remove(); }
+    else {
+      layer.classList.add('closing');
+      setTimeout(function () { layer.remove(); }, 290);
+    }
     L.app = null; curApp = null;
   }
   function goHome() {
@@ -567,14 +583,17 @@
       var all = JSON.parse(store.get('ourday.sms') || '{}');
       smsOrder = JSON.parse(store.get('ourday.smsOrder') || '[]');
       C.MESSAGES.forEach(function (m) {
-        (all[m.id] || []).forEach(function (t) { m.msgs.push({ from: 'me', time: '08:00', text: t }); m.delivered = true; });
+        (all[m.id] || []).forEach(function (t) {
+          var tx = typeof t === 'string' ? t : t.text, tm = typeof t === 'string' ? '08:00' : t.time;
+          m.msgs.push({ from: 'me', time: tm, text: tx, reply: true }); m.delivered = true;
+        });
       });
     } catch (e) {}
   }
-  function saveSms(id, text) {
+  function saveSms(id, text, time) {
     var all = {};
     try { all = JSON.parse(store.get('ourday.sms') || '{}'); } catch (e) {}
-    (all[id] = all[id] || []).push(text);
+    (all[id] = all[id] || []).push({ text: text, time: time });
     store.set('ourday.sms', JSON.stringify(all));
     smsOrder = smsOrder.filter(function (x) { return x !== id; });
     smsOrder.unshift(id);
@@ -595,7 +614,8 @@
       C.MESSAGES.forEach(function (m) { if (smsOrder.indexOf(m.id) === -1) { ordered.push(m); } });
       ordered.forEach(function (m) {
         var last = m.msgs[m.msgs.length - 1];
-        var lt = smsOrder.indexOf(m.id) !== -1 ? '08:00' : m.listTime;
+        var lt = m.listTime;
+        if (smsOrder.indexOf(m.id) !== -1 && last.reply) { lt = last.time; }
         html += '<div class="trow" data-id="' + m.id + '">' + (msgUnread[m.id] ? '<i class="dot"></i>' : '') +
           avHtml(m.kind === 'spam' ? 'person' : 'initial', m.name) +
           '<div class="mid"><div class="l1"><b>' + esc(m.name) + '</b><span>' + esc(lt) + ' ' + I.chevR + '</span></div><div class="pv">' + esc(last.text) + '</div></div></div>';
@@ -621,10 +641,10 @@
     var shown = m.msgs.slice();
     var replyStart = -1;
     if (smsOrder.indexOf(m.id) !== -1) {
-      for (var ri = shown.length - 1; ri >= 0 && shown[ri].time === '08:00' && shown[ri].from === 'me'; ri--) { replyStart = ri; }
+      for (var ri = shown.length - 1; ri >= 0 && shown[ri].reply; ri--) { replyStart = ri; }
     }
     shown.forEach(function (g, i) {
-      if (i === replyStart) { bubs += '<div class="divd">오늘 08:00</div>'; }
+      if (i === replyStart) { bubs += '<div class="divd">오늘 ' + esc(g.time) + '</div>'; }
       bubs += '<div class="bub ' + g.from + (prev && prev !== g.from ? ' gap' : '') + '"><div class="b">' + linkify(g.text) + '</div><span class="tt">' + esc(g.time) + '</span></div>';
       prev = g.from;
     });
@@ -642,7 +662,7 @@
     var thForm = qs(v, '#thForm');
     if (thForm) {
       var q = qs(v, '#thQ'), bx = qs(v, '.th-in .bx');
-      var repliedOnce = m.msgs.some(function (x) { return x.time === '08:00' && x.from === 'me' && smsOrder.indexOf(m.id) !== -1; });
+      var repliedOnce = m.msgs.some(function (x) { return x.reply; });
       q.addEventListener('input', function () { bx.classList.toggle('has', q.value.length > 0); });
       thForm.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -650,14 +670,15 @@
         if (!text) { return; }
         var dl = qs(v, '#dlv');
         var lastFrom = m.msgs[m.msgs.length - 1].from;
+        var nowT = clockHHMM();
         if (!repliedOnce) {
-          dl.insertAdjacentHTML('beforebegin', '<div class="divd">오늘 08:00</div>');
+          dl.insertAdjacentHTML('beforebegin', '<div class="divd">오늘 ' + nowT + '</div>');
           repliedOnce = true;
         }
-        dl.insertAdjacentHTML('beforebegin', '<div class="bub me' + (lastFrom !== 'me' ? ' gap' : '') + '"><div class="b">' + linkify(text) + '</div><span class="tt">08:00</span></div>');
-        m.msgs.push({ from: 'me', time: '08:00', text: text });
+        dl.insertAdjacentHTML('beforebegin', '<div class="bub me' + (lastFrom !== 'me' ? ' gap' : '') + '"><div class="b">' + linkify(text) + '</div><span class="tt">' + nowT + '</span></div>');
+        m.msgs.push({ from: 'me', time: nowT, text: text, reply: true });
         m.delivered = true;
-        saveSms(m.id, text);
+        saveSms(m.id, text, nowT);
         dl.style.display = 'block';
         q.value = ''; bx.classList.remove('has');
         body.scrollTop = body.scrollHeight;
@@ -970,7 +991,7 @@
     setTimeout(function () { b.remove(); }, 3800);
   }
   function dmNotifHtml(d) {
-    return '<div class="notif dmn" data-id="' + d.id + '"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div><div class="tm">방금</div></div>';
+    return '<div class="notif dmn" data-id="' + d.id + '"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div><div class="tm" data-at="' + clockMin() + '">방금</div></div>';
   }
   /* 새벽 사이에 이미 와 있던 쪽지는 하나로 묶어서 보여줘요(실제 도착 시각으로) */
   function preGroupHtml() {
@@ -1003,19 +1024,21 @@
   }
   function bindLockNotifs() {
     if (!L.lock) { return; }
-    qsa(L.lock, '.dmn[data-id]').forEach(function (n) {
+    qsa(L.lock, '.notif').forEach(function (n) {
       if (n.__b) { return; }
       n.__b = true;
-      n.addEventListener('click', function () { pendingDm = n.getAttribute('data-id'); showPass(); });
+      n.style.cursor = 'pointer';
+      n.addEventListener('click', function () { pendingDm = n.getAttribute('data-id') || null; showPass(); });
     });
   }
   var pendingDm = null;
   function goDm(id) {
-    function go() { if (xCtx && xCtx.goDM) { xCtx.goDM(id); } }
+    function go() { if (xCtx && xCtx.goDM) { xCtx.goDM(id, true); } }
     if (current === 'lock') { pendingDm = id; showPass(); return; }
     if (current === 'app' && curApp === 'x') { go(); return; }
-    if (current === 'app') { closeApp(); setTimeout(function () { openApp('x'); setTimeout(go, 500); }, 420); return; }
-    if (current === 'home') { openApp('x'); setTimeout(go, 500); }
+    /* 홈 화면이 보였다가 열리지 않게, 바로 X 쪽지창으로 들어가요 */
+    if (current === 'app') { closeApp(true); }
+    if (current === 'home') { openApp('x', null, { instant: true }); go(); }
   }
   /* 쪽지는 트위터를 열지 않아도 시간차를 두고 계속 도착해요(잠금화면에는 알림으로, 그 밖에는 위에서 내려오는 배너로) */
   function startDMs() {
@@ -1028,6 +1051,7 @@
     function step() {
       dmArrived++;
       var d = C.DMS[dmArrived - 1];
+      if (String(d.time) >= '08:00') { d.time = clockHHMM(); }
       if (current === 'lock') { addLockNotif(d); }
       else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
       updateBadge();
@@ -1050,7 +1074,7 @@
       return '<div class="x-bar">' +
         '<button type="button" data-go="home">' + (ctx.tab === 'home' ? I.homeOn : I.home) + '<i class="rd"></i></button>' +
         '<button type="button" data-go="search">' + I.search.replace('width="18" height="18"', 'width="26" height="26"').replace('stroke-width="2.4"', ctx.tab === 'search' ? 'stroke-width="3.4"' : 'stroke-width="2.4"') + '</button>' +
-        '<button type="button" data-soon="1"><span class="pf">' + I.person.replace('<svg ', '<svg width="20" height="20" ').replace('fill="currentColor"', 'fill="#fff"') + '</span></button>' +
+        '<button type="button" data-go="me"><span class="pf' + (ctx.tab === 'me' ? ' act' : '') + '">' + I.person.replace('<svg ', '<svg width="20" height="20" ').replace('fill="currentColor"', 'fill="#fff"') + '</span></button>' +
         '<button type="button" data-go="noti">' + (ctx.tab === 'noti' ? I.bell.replace('stroke-width="2"', 'stroke-width="3"') : I.bell) + (notiOpen || ctx.tab === 'noti' ? '' : '<span class="bg2" style="display:flex">' + (C.NOTIS || []).length + '</span>') + '</button>' +
         '<button type="button" data-go="dm">' + (ctx.tab === 'dm' ? I.mailOn : I.mail) + '<span class="bg2" id="dmBadge" style="display:' + (n > 0 ? 'flex' : 'none') + '">' + n + '</span></button></div>';
     }
@@ -1096,10 +1120,10 @@
       });
     }
     ctx.renderDM = renderDM;
-    ctx.goDM = function (id) {
+    ctx.goDM = function (id, instant) {
       ctx.tab = 'dm';
       render();
-      openDM(id);
+      openDM(id, instant);
     };
     function renderSearch() {
       var gear = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 8.800a3.200 3.200 0 100 6.400 3.200 3.200 0 000-6.400z"/><path d="M19.400 13a7.800 7.800 0 000-2l2-1.500-2-3.400-2.300.9a7.600 7.600 0 00-1.700-1l-.4-2.500h-4l-.4 2.500a7.600 7.600 0 00-1.700 1l-2.300-.9-2 3.400 2 1.500a7.800 7.800 0 000 2l-2 1.500 2 3.400 2.300-.9c.5.400 1.100.7 1.700 1l.4 2.500h4l.4-2.500c.6-.3 1.200-.6 1.700-1l2.300.9 2-3.400z"/></svg>';
@@ -1164,7 +1188,26 @@
         '<div class="no-list">' + rows + '</div>' + barHtml();
       bindBar();
     }
-    function render() { if (ctx.tab === 'home') { renderHome(); } else if (ctx.tab === 'search') { renderSearch(); } else if (ctx.tab === 'noti') { renderNoti(); } else { renderDM(); } }
+    function renderMe() {
+      var cal = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"><rect x="3.500" y="5" width="17" height="15" rx="3"/><path d="M3.500 10h17M8 3v4M16 3v4"/></svg>';
+      var tabs = '<div class="mt on"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.500 9.500h7M8.500 14h4"/></svg><b>게시물</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div>' +
+        '<div class="mt"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linejoin="round"><path d="M12 4C7.500 4 4 7 4 10.800c0 2.100 1.100 4 2.900 5.200-.2 1.100-.8 2-1.700 2.800 1.800-.1 3.300-.7 4.400-1.600.7.200 1.500.3 2.400.3 4.500 0 8-3 8-6.700S16.500 4 12 4z"/></svg></div>' +
+        '<div class="mt"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.500l-3.500 3.500L7 10.500M3.500 7H16a4 4 0 014 4v1M17 20.500l3.500-3.500-3.500-3.500M20.500 17H8a4 4 0 01-4-4v-1"/></svg></div>' +
+        '<div class="mt"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linejoin="round"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M8 4h8M10.500 11.500v5l4-2.500z"/></svg></div>';
+      base.innerHTML = sbHtml('light') +
+        '<div class="me-banner"><button type="button" class="mb back" aria-label="뒤로">' + I.back.replace(/stroke="[^"]*"/, 'stroke="#fff"') + '</button><span class="mb" style="pointer-events:none">' + I.search.replace('width="18" height="18"', 'width="22" height="22"') + '</span></div>' +
+        '<div class="me-body"><div class="me-av"><svg viewBox="0 0 92 92" width="92" height="92"><rect width="92" height="92" fill="#cfd9de"/><ellipse cx="46" cy="38" rx="17" ry="20" fill="#647a8c"/><ellipse cx="46" cy="96" rx="34" ry="26" fill="#647a8c"/></svg></div>' +
+        '<div class="me-btns"><span>프로필 공유</span><span>프로필 수정</span></div>' +
+        '<div class="me-name">&nbsp;</div><div class="me-hd">@' + esc(USER.igId) + '</div>' +
+        '<div class="me-join">' + cal + '<span>2026년 10월에 가입함</span></div>' +
+        '<div class="me-fol"><span><b>0</b> 팔로잉</span><span><b>0</b> 팔로워</span></div>' +
+        '<div class="me-tabs">' + tabs + '</div>' +
+        '<div class="act-empty"><h2>아직 게시물이 없습니다</h2><p>게시물을 올리면 여기에 표시됩니다.</p></div></div>' +
+        '<button class="fab" type="button" data-soon="1">' + I.plus.replace('width="20" height="20"', 'width="26" height="26"') + '</button>' + barHtml();
+      bindBar();
+      qs(base, '.me-banner .back').addEventListener('click', function () { ctx.tab = 'home'; render(); });
+    }
+    function render() { if (ctx.tab === 'me') { renderMe(); return; } if (ctx.tab === 'home') { renderHome(); } else if (ctx.tab === 'search') { renderSearch(); } else if (ctx.tab === 'noti') { renderNoti(); } else { renderDM(); } }
 
     /* 피드/상세에서 쓰는 공통 동작: 마음, 트윗 열기, 재게시 숫자 */
     function bindFeed(scope) {
@@ -1288,7 +1331,7 @@
     }
 
     /* 쪽지 대화 */
-    function openDM(id) {
+    function openDM(id, instant) {
       var d = C.DMS.filter(function (x) { return x.id === id; })[0];
       if (!d) { return; }
       dmRead[id] = true;
@@ -1302,6 +1345,7 @@
         bub + '<div class="dbub"><div class="t">' + esc(d.time) + '</div></div></div>' +
         '<div class="dm-in"><span class="pl">' + I.plus.replace('width="20" height="20"', 'width="26" height="26"') + '</span><div><span>쪽지</span>' + I.mic.replace('width="18" height="18"', 'width="24" height="24"') + '</div></div>', 'xa');
       v.style.background = '#fff';
+      if (instant) { v.classList.remove('slide-in'); }
       qs(v, '.back').addEventListener('click', function () {
         popView(v, function () { updateBadge(); if (ctx.tab === 'dm') { renderDM(); } });
       });
@@ -1316,6 +1360,19 @@
   /* =========================================================
      시작
      ========================================================= */
+  function agoStr(at) {
+    var d = clockMin() - at;
+    if (d < 1) { return '방금'; }
+    return d < 60 ? d + '분 전' : Math.floor(d / 60) + '시간 전';
+  }
+  setInterval(function () {
+    var t = clockStr();
+    qsa(phone, '.clk').forEach(function (n) { if (n.textContent !== t) { n.textContent = t; } });
+    qsa(phone, '.tm[data-at]').forEach(function (n) {
+      var a = agoStr(parseInt(n.getAttribute('data-at'), 10));
+      if (n.textContent !== a) { n.textContent = a; }
+    });
+  }, 1000);
   function boot() {
     phone.classList.toggle('standalone', isStandalone());
     handleReset();

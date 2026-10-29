@@ -572,3 +572,27 @@ svg{display:block}
 .notifs.dense .notif .ic{width:34px;height:34px}
 .notif.grp{background:rgba(236,236,242,.82)}
 .notifs.dense .notif .tx span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+
+/* ---- X 내 프로필 ---- */
+.me-banner{position:absolute;top:0;left:0;right:0;height:calc(var(--top) + 130px);background:linear-gradient(#858585,#b0b0b0);z-index:2}
+.me-banner .mb{position:absolute;top:calc(var(--top) + 8px);width:46px;height:46px;border-radius:50%;background:rgba(60,60,60,.7);display:flex;align-items:center;justify-content:center;color:#fff}
+.me-banner .mb.back{left:18px}
+.me-banner span.mb{right:18px}
+.me-body{position:absolute;inset:0;overflow-y:auto;padding:calc(var(--top) + 130px) 0 120px}
+.me-av{position:absolute;left:12px;top:calc(var(--top) + 88px);width:92px;height:92px;border-radius:50%;background:#0a0a0a;border:4px solid #fff;display:flex;align-items:center;justify-content:center;z-index:3;box-sizing:content-box;margin-left:0}
+.me-btns{display:flex;justify-content:flex-end;gap:10px;padding:10px 16px 0;height:54px}
+.me-btns span{height:40px;padding:0 18px;border:1.5px solid #cfd9de;border-radius:20px;display:flex;align-items:center;font-size:15px;font-weight:700}
+.me-name{padding:34px 18px 0;font-size:22px;font-weight:800;margin-top:-4px}
+.me-hd{padding:0 18px;color:#536471;font-size:16px;margin-top:2px}
+.me-join{display:flex;align-items:center;gap:6px;padding:14px 18px 0;color:#536471;font-size:15px}
+.me-fol{display:flex;gap:18px;padding:12px 18px 0;color:#536471;font-size:15px}
+.me-fol b{color:#0f1419;font-weight:800}
+.me-tabs{display:flex;align-items:center;margin-top:16px;border-bottom:1px solid #eff3f4;height:52px}
+.me-tabs .mt{flex:1;height:52px;display:flex;align-items:center;justify-content:center;gap:6px;color:#536471;position:relative}
+.me-tabs .mt.on{color:#0f1419;flex:1.5}
+.me-tabs .mt.on b{font-size:16px}
+.me-tabs .mt.on::after{content:"";position:absolute;left:14%;right:14%;bottom:0;height:4px;border-radius:2px;background:#0f1419}
+.x-bar .pf.act{outline:2px solid #0f1419;outline-offset:1px}
+
+.me-av{background:#cfd9de;overflow:hidden}
+.me-av svg{display:block;width:100%;height:100%}
