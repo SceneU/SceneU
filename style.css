@@ -566,3 +566,9 @@ svg{display:block}
 .kr-in{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(var(--sab) + 18px);display:flex;align-items:center;gap:8px;background:#fff}
 .kr-in .fld{flex:1;height:38px;border-radius:19px;background:#f2f2f2;display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#9a9a9f;font-size:15px}
 .kr-in .pl,.kr-in .hs{width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex:none}
+
+.notifs.dense{gap:6px}
+.notifs.dense .notif{padding:8px 12px}
+.notifs.dense .notif .ic{width:34px;height:34px}
+.notif.grp{background:rgba(236,236,242,.82)}
+.notifs.dense .notif .tx span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}

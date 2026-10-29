@@ -5,6 +5,20 @@
 (function () {
   'use strict';
   var C = window.CONFIG;
+  /* config.js 에 없는 새 항목은 여기 기본값을 써요 (config.js 를 덜 고쳐도 화면이 뜨게) */
+  var DEF = {"SEARCH_KEYWORD":"ㅇㅇ","TRENDS":["ㅇㅇ연애","여친비계","ㅇㅇ여친","비밀연애"],"NOTIS":[{"who":["user48201937","a8472910","user_3047182"],"more":14,"time":"방금"},{"who":["k29481736"],"more":0,"time":"1분"},{"who":["user90183746","x_5029381"],"more":8,"time":"1분"},{"who":["z_4410927"],"more":0,"time":"2분"},{"who":["user_7731205","m_3829104","user61820493"],"more":21,"time":"2분"},{"who":["q8830175"],"more":0,"time":"3분"},{"who":["user_2290471","t_9017263"],"more":5,"time":"3분"},{"who":["user73910284"],"more":0,"time":"4분"},{"who":["w_6150382","user_1048326","r_7720914"],"more":17,"time":"5분"},{"who":["user_5503817"],"more":0,"time":"5분"},{"who":["n_2087154","user39174026"],"more":11,"time":"6분"},{"who":["user_8841029"],"more":0,"time":"7분"},{"who":["p_4619375","user_9052718","d_1830462"],"more":9,"time":"8분"},{"who":["user24680135"],"more":0,"time":"9분"},{"who":["s_7305921","user_6617240"],"more":19,"time":"11분"},{"who":["user_3158064"],"more":0,"time":"12분"},{"who":["c_9284017","user58203916","b_4471028"],"more":6,"time":"14분"},{"who":["user_1196347"],"more":0,"time":"16분"}],"KAKAO":{"FRIENDS":["신정환","최영재","이경민","한지훈","김도훈","한진","류인아","엄마","아빠"],"ROOMS":{"엄마":{"unread":1,"msgs":[{"d":"2023-11-12","t":"19:20","from":"them","text":"밥은 먹었니"},{"d":"2023-11-12","t":"19:21","from":"me","text":"먹었어 엄마는?"},{"d":"2023-11-12","t":"19:22","from":"them","text":"엄마도 먹었지 김장 때 올 수 있지?"},{"d":"2023-11-12","t":"19:25","from":"me","text":"응 그날 갈게"},{"d":"2023-11-12","t":"19:26","from":"them","text":"그래 오면 김치 챙겨줄게"},{"d":"2024-02-10","t":"08:40","from":"them","text":"설에 몇 시쯤 도착하니"},{"d":"2024-02-10","t":"08:52","from":"me","text":"점심 전에 갈 것 같아"},{"d":"2024-02-10","t":"08:53","from":"them","text":"전 부쳐놓을게 천천히 와"},{"d":"2024-05-08","t":"18:30","from":"me","text":"엄마 아빠 어버이날 고마워요 사랑해요"},{"d":"2024-05-08","t":"18:34","from":"them","text":"아이고 우리 새끼 엄마도 사랑한다"},{"d":"2024-08-03","t":"17:05","from":"them","text":"엄마가 반찬 해서 문 앞에 두고 간다"},{"d":"2024-08-03","t":"17:40","from":"me","text":"방금 봤어 잘 먹을게"},{"d":"2024-08-03","t":"17:41","from":"them","text":"냉장고에 바로 넣어"},{"d":"2025-01-20","t":"09:15","from":"them","text":"요즘 감기 유행이라던데 몸은 괜찮니"},{"d":"2025-01-20","t":"09:30","from":"me","text":"괜찮아 걱정 마"},{"d":"2025-01-20","t":"09:31","from":"them","text":"약 챙겨 먹고 따뜻하게 자"},{"d":"2025-06-08","t":"11:20","from":"them","text":"이번 주말에 올 수 있어? 아빠가 삼겹살 구워준대"},{"d":"2025-06-08","t":"11:45","from":"me","text":"토요일에 갈게"},{"d":"2025-11-02","t":"14:10","from":"them","text":"김장 올해도 할 거야"},{"d":"2025-11-02","t":"14:30","from":"me","text":"날짜 정해지면 말해줘"},{"d":"2026-03-15","t":"10:05","from":"them","text":"날 풀렸다고 얇게 입고 다니지 마라"},{"d":"2026-03-15","t":"10:12","from":"me","text":"알았어~"},{"d":"2026-08-22","t":"16:50","from":"them","text":"반찬 현관 앞에 두고 간다"},{"d":"2026-08-22","t":"17:20","from":"me","text":"고마워 엄마 잘 먹을게"},{"d":"2026-08-22","t":"17:21","from":"them","text":"밥 거르지 말고"},{"d":"2026-10-23","t":"08:10","from":"them","text":"요즘 아침저녁으로 쌀쌀하다 옷 따뜻하게 입고 다녀"},{"d":"2026-10-23","t":"08:11","from":"them","text":"주말에 시간 되면 집에 한번 와"}]},"아빠":{"unread":0,"msgs":[{"d":"2023-12-02","t":"21:10","from":"them","text":"어디냐"},{"d":"2023-12-02","t":"21:12","from":"me","text":"집이에요"},{"d":"2023-12-02","t":"21:13","from":"them","text":"그래 조심히 다녀라"},{"d":"2024-03-17","t":"15:20","from":"them","text":"차 점검 받았냐"},{"d":"2024-03-17","t":"15:40","from":"me","text":"아직요 이번 주에 받을게요"},{"d":"2024-03-17","t":"15:41","from":"them","text":"엔진오일 갈 때 됐다"},{"d":"2024-09-14","t":"11:05","from":"them","text":"추석 전에 시간 되면 와라"},{"d":"2024-09-14","t":"11:30","from":"me","text":"네 갈게요"},{"d":"2025-05-08","t":"19:00","from":"them","text":"어버이날 뭐 필요 없다 몸이나 챙겨라"},{"d":"2025-05-08","t":"19:20","from":"me","text":"그래도 용돈 보냈어요"},{"d":"2025-05-08","t":"19:22","from":"them","text":"고맙다"},{"d":"2025-12-24","t":"07:30","from":"them","text":"눈 온다 길 미끄러우니 운전 조심해라"},{"d":"2026-06-10","t":"13:00","from":"them","text":"아빠가 호박 따서 엄마 편에 보냈다"},{"d":"2026-06-10","t":"13:25","from":"me","text":"잘 먹을게요"},{"d":"2026-10-12","t":"20:30","from":"them","text":"밥은 먹었냐"},{"d":"2026-10-12","t":"20:40","from":"me","text":"먹었어요"},{"d":"2026-10-12","t":"20:41","from":"them","text":"그래 들어가라"}]},"신정환":{"unread":0,"msgs":[]},"최영재":{"unread":0,"msgs":[]},"류인아":{"unread":0,"msgs":[]},"이경민":{"unread":0,"msgs":[]},"한지훈":{"unread":0,"msgs":[]}}}};
+  Object.keys(DEF).forEach(function (k) { if (C[k] === undefined) { C[k] = DEF[k]; } });
+  var LIVE_DMS = [
+    { id: "d11", name: "user_2048173", handle: "user_2048173", time: "08:00", followers: 0, following: 1, posts: 0, msgs: ["방금 또 올라왔어요 보셨어요?"] },
+    { id: "d12", name: "p5517302",     handle: "p5517302",     time: "08:00", followers: 1, following: 2, posts: 0, msgs: ["입장 안 내시나요?"] },
+    { id: "d13", name: "user_8830416", handle: "user_8830416", time: "08:00", followers: 0, following: 3, posts: 0, msgs: ["팬들 다 기다리는데 말 한마디는 해야죠"] },
+    { id: "d14", name: "r_2290745",    handle: "r_2290745",    time: "08:00", followers: 2, following: 4, posts: 0, msgs: ["{NAME}님 계정 지우면 더 이상해 보여요"] },
+    { id: "d15", name: "user61930274", handle: "user61930274", time: "08:00", followers: 0, following: 2, posts: 0, msgs: ["스크린샷 이미 다 저장돼 있어요 ㅋㅋ"] },
+    { id: "d16", name: "t_7041829",    handle: "t_7041829",    time: "08:00", followers: 1, following: 1, posts: 0, msgs: ["읽씹이네 ㅋㅋ"] }
+  ];
+  if (!C.DMS.some(function (d) { return String(d.time) >= '08:00'; })) { C.DMS = C.DMS.concat(LIVE_DMS); }
+  var DM_PRE = 0;
+  while (DM_PRE < C.DMS.length && String(C.DMS[DM_PRE].time) < '08:00') { DM_PRE++; }
   var phone = document.getElementById('phone');
 
   /* ---------- 유틸 ---------- */
@@ -50,7 +64,7 @@
   function handleReset() {
     try {
       if (/[?&]reset=1/.test(location.search)) {
-        store.del('ourday.user'); store.del('ourday.dm'); store.del('ourday.dmRead');
+        store.del('ourday.user'); store.del('ourday.dm'); store.del('ourday.dmRead'); store.del('ourday.sms'); store.del('ourday.smsOrder');
         if (history.replaceState) { history.replaceState(null, '', location.pathname); }
       }
     } catch (e) {}
@@ -305,11 +319,7 @@
     clearLayers();
     passBuf = ''; passOn = false;
     setHB('light');
-    var pastDms = [];
-    for (var pi = Math.min(dmArrived, C.DMS.length) - 1; pi >= 0 && pastDms.length < 3; pi--) {
-      if (!dmRead[C.DMS[pi].id]) { pastDms.push(dmNotifHtml(C.DMS[pi])); }
-    }
-    var notifs = pastDms.join('') + C.NOTIFS.map(function (n) {
+    var notifs = preGroupHtml() + xFollowHtml() + C.NOTIFS.map(function (n) {
       return '<div class="notif"><div class="ic">' + ICO.phone + '</div><div class="tx"><b>' + esc(n.name) + '</b><span>' + esc(n.text) + '</span></div><div class="tm">' + esc(n.time) + '</div></div>';
     }).join('');
     var keys = '';
@@ -331,6 +341,7 @@
     L.lock = l;
     setBg(qs(l, '#lockBg'), [C.IMG.lockWallpaper]);
     startDMs();
+    bindLockNotifs(); lockDense();
     qs(l, '#lkHit').addEventListener('click', showPass);
     swipeDetect(l, function (dx, dy) { if (!passOn && dy < -50 && Math.abs(dy) > Math.abs(dx)) { showPass(); } });
     qsa(l, '.key[data-k]').forEach(function (k) {
@@ -375,6 +386,7 @@
     lock.classList.add('fade-out');
     current = 'home';
     setTimeout(function () { lock.remove(); L.lock = null; }, 360);
+    if (pendingDm) { var pid = pendingDm; pendingDm = null; setTimeout(function () { goDm(pid); }, 800); }
   }
   document.addEventListener('keydown', function (e) {
     if (current === 'lock' && passOn && /^[0-9]$/.test(e.key)) { pressKey(e.key); }
@@ -902,10 +914,9 @@
   var liked = {};
   var xCtx = null;
   var notiOpen = false;
-  var dmArrived = parseInt(store.get('ourday.dm') || '0', 10) || 0;
+  var dmArrived = DM_PRE;
   var dmStarted = false;
   var dmRead = {};
-  try { dmRead = JSON.parse(store.get('ourday.dmRead') || '{}') || {}; } catch (e) { dmRead = {}; }
 
   function rich(s) {
     return String(s).split(/(\{IG\}|\{NAME\})/).map(function (p) {
@@ -949,14 +960,34 @@
     if (b) { b.textContent = n; b.style.display = n > 0 ? 'flex' : 'none'; }
   }
   function bannerShow(d) {
+    var bdm = d;
     var b = el('<div class="banner"><div class="bi" style="color:#fff">' + I.xlogo(22) + '</div><div><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div></div>');
     phone.appendChild(b);
+    b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
+    b.addEventListener('click', function () { b.remove(); goDm(bdm.id); });
     setTimeout(function () { b.classList.add('on'); }, 30);
     setTimeout(function () { b.classList.remove('on'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
   function dmNotifHtml(d) {
-    return '<div class="notif dmn"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div><div class="tm">방금</div></div>';
+    return '<div class="notif dmn" data-id="' + d.id + '"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div><div class="tm">방금</div></div>';
+  }
+  /* 새벽 사이에 이미 와 있던 쪽지는 하나로 묶어서 보여줘요(실제 도착 시각으로) */
+  function preGroupHtml() {
+    var n = 0, last = null;
+    for (var i = 0; i < DM_PRE; i++) { if (!dmRead[C.DMS[i].id]) { n++; last = C.DMS[i]; } }
+    if (!n) { return ''; }
+    return '<div class="notif dmn grp" data-id="' + last.id + '"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지 ' + n + '개</b><span>' + esc(last.name) + ': ' + rich(last.msgs[0]) + '</span></div><div class="tm">' + esc(last.time) + '</div></div>';
+  }
+  function xFollowHtml() {
+    var n = (C.NOTIS || [])[0];
+    if (!n) { return ''; }
+    var who = n.who[0] + (n.more > 0 ? '님 외 ' + n.more + '명이' : '님이');
+    return '<div class="notif"><div class="ic">' + ICO.x + '</div><div class="tx"><b>알림</b><span>' + esc(who) + ' 회원님을 팔로우했습니다</span></div><div class="tm">07:58</div></div>';
+  }
+  function lockDense() {
+    var box = L.lock && qs(L.lock, '.notifs');
+    if (box) { box.classList.toggle('dense', box.children.length > 4); }
   }
   function addLockNotif(d) {
     if (!L.lock) { return; }
@@ -965,8 +996,26 @@
     var n = el(dmNotifHtml(d));
     n.classList.add('pop');
     box.insertBefore(n, box.firstChild);
-    var dms = qsa(box, '.dmn');
-    while (dms.length > 3) { dms[dms.length - 1].remove(); dms.pop(); }
+    var live = qsa(box, '.dmn:not(.grp)');
+    while (live.length > 1) { live[live.length - 1].remove(); live.pop(); }
+    bindLockNotifs();
+    lockDense();
+  }
+  function bindLockNotifs() {
+    if (!L.lock) { return; }
+    qsa(L.lock, '.dmn[data-id]').forEach(function (n) {
+      if (n.__b) { return; }
+      n.__b = true;
+      n.addEventListener('click', function () { pendingDm = n.getAttribute('data-id'); showPass(); });
+    });
+  }
+  var pendingDm = null;
+  function goDm(id) {
+    function go() { if (xCtx && xCtx.goDM) { xCtx.goDM(id); } }
+    if (current === 'lock') { pendingDm = id; showPass(); return; }
+    if (current === 'app' && curApp === 'x') { go(); return; }
+    if (current === 'app') { closeApp(); setTimeout(function () { openApp('x'); setTimeout(go, 500); }, 420); return; }
+    if (current === 'home') { openApp('x'); setTimeout(go, 500); }
   }
   /* 쪽지는 트위터를 열지 않아도 시간차를 두고 계속 도착해요(잠금화면에는 알림으로, 그 밖에는 위에서 내려오는 배너로) */
   function startDMs() {
@@ -978,7 +1027,6 @@
     }
     function step() {
       dmArrived++;
-      store.set('ourday.dm', String(dmArrived));
       var d = C.DMS[dmArrived - 1];
       if (current === 'lock') { addLockNotif(d); }
       else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
@@ -1048,6 +1096,11 @@
       });
     }
     ctx.renderDM = renderDM;
+    ctx.goDM = function (id) {
+      ctx.tab = 'dm';
+      render();
+      openDM(id);
+    };
     function renderSearch() {
       var gear = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 8.800a3.200 3.200 0 100 6.400 3.200 3.200 0 000-6.400z"/><path d="M19.400 13a7.800 7.800 0 000-2l2-1.500-2-3.400-2.300.9a7.600 7.600 0 00-1.700-1l-.4-2.500h-4l-.4 2.500a7.600 7.600 0 00-1.700 1l-2.300-.9-2 3.400 2 1.500a7.800 7.800 0 000 2l-2 1.500 2 3.400 2.300-.9c.5.400 1.100.7 1.700 1l.4 2.500h4l.4-2.500c.6-.3 1.200-.6 1.700-1l2.300.9 2-3.400z"/></svg>';
       var tabs = ['탐색', '실시간 트렌드', '뉴스', '스포츠', '엔터테인먼트'].map(function (n, i) { return '<span class="' + (i === 0 ? 'on' : '') + '"><em>' + n + '</em></span>'; }).join('');
@@ -1239,7 +1292,6 @@
       var d = C.DMS.filter(function (x) { return x.id === id; })[0];
       if (!d) { return; }
       dmRead[id] = true;
-      store.set('ourday.dmRead', JSON.stringify(dmRead));
       var bub = d.msgs.map(function (m) {
         return '<div class="dbub"><div class="b">' + rich(m) + '</div></div>';
       }).join('');
