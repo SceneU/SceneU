@@ -198,13 +198,24 @@
     current = 'start';
     clearLayers();
     setHB('off');
-    var s = el('<section class="layer start fade-in">' +
-      '<h1>우리의 하루</h1><p class="sub">시작하기 전에 알려주세요</p>' +
+    var s = el('<section class="layer start fade-in"><div class="card">' +
+      '<p class="sub">시작하기 전에 알려주세요</p>' +
       '<label>이름<input id="inName" maxlength="10" autocomplete="off" placeholder="이름"></label>' +
       '<label>인스타그램 아이디<div class="at"><span>@</span><input id="inIg" maxlength="30" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="instagram_id"></div></label>' +
       '<p class="note">※ 본인 또는 가상의 아이디만 입력해주세요.</p>' +
-      '<button class="go" id="goBtn" type="button" disabled>시작</button></section>');
+      '<button class="go" id="goBtn" type="button" disabled>시작</button></div></section>');
     phone.appendChild(s);
+    (function () {
+      var src = (C.IMG && C.IMG.startBg) || './start-bg.jpg';
+      var im = new Image();
+      im.onload = function () {
+        s.style.backgroundImage = 'url("' + src + '")';
+        s.style.backgroundSize = 'cover';
+        s.style.backgroundRepeat = 'no-repeat';
+        s.style.backgroundPosition = 'center';
+      };
+      im.src = src;
+    })();
     var inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
     function clean() {
       inIg.value = inIg.value.replace(/^@+/, '').replace(/[^A-Za-z0-9_.]/g, '');

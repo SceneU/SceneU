@@ -1,12 +1,12 @@
 {
-  "name": "우리의 하루",
-  "short_name": "우리의 하루",
+  "name": "☆",
+  "short_name": "☆",
   "description": "가상 휴대폰 연애 시뮬레이션",
   "lang": "ko",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#14151c",
-  "theme_color": "#14151c",
+  "background_color": "#fff5fa",
+  "theme_color": "#fff5fa",
   "start_url": "./",
   "scope": "./",
   "icons": [
