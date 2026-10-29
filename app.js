@@ -74,7 +74,7 @@
   function handleReset() {
     try {
       if (/[?&]reset=1/.test(location.search)) {
-        store.del('ourday.user'); store.del('ourday.dm'); store.del('ourday.dmRead'); store.del('ourday.sms'); store.del('ourday.smsOrder');
+        store.del('ourday.user'); store.del('ourday.dm'); store.del('ourday.dmRead'); store.del('ourday.sms'); store.del('ourday.smsOrder'); store.del('ourday.kkav');
         if (history.replaceState) { history.replaceState(null, '', location.pathname); }
       }
     } catch (e) {}
@@ -728,8 +728,34 @@
       hash: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><path d="M9 4L7 20M17 4l-2 20M4 9h17M3 15h17"/></svg>',
       menu: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
     };
-    function avK(size) {
-      return '<div class="kk-av"' + (size ? ' style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.37) + 'px"' : '') + '>' + I.person.replace('<svg ', '<svg width="' + Math.round((size || 48) * 0.62) + '" height="' + Math.round((size || 48) * 0.62) + '" ') + '</div>';
+    var AVP = {};
+    try { AVP = JSON.parse(store.get('ourday.kkav') || '{}') || {}; } catch (e) { AVP = {}; }
+    function avK(size, key) {
+      var ph = key && AVP[key];
+      var st = size ? ' style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.37) + 'px"' : '';
+      if (ph) { return '<div class="kk-av"' + st + '><img src="' + ph + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>'; }
+      return '<div class="kk-av"' + st + '>' + I.person.replace('<svg ', '<svg width="' + Math.round((size || 48) * 0.62) + '" height="' + Math.round((size || 48) * 0.62) + '" ') + '</div>';
+    }
+    function pickPhoto(key, done) {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none';
+      inp.addEventListener('change', function () {
+        var f = inp.files && inp.files[0];
+        if (!f) { return; }
+        var url = URL.createObjectURL(f), im = new Image();
+        im.onload = function () {
+          var S = 256, c = document.createElement('canvas'); c.width = S; c.height = S;
+          var w = im.naturalWidth, h = im.naturalHeight, m = Math.min(w, h);
+          c.getContext('2d').drawImage(im, (w - m) / 2, (h - m) / 2, m, m, 0, 0, S, S);
+          AVP[key] = c.toDataURL('image/jpeg', 0.82);
+          try { store.set('ourday.kkav', JSON.stringify(AVP)); } catch (e) {}
+          URL.revokeObjectURL(url);
+          done();
+        };
+        im.src = url;
+      });
+      document.body.appendChild(inp); inp.click();
+      setTimeout(function () { inp.remove(); }, 60000);
     }
     function pd(d) { var a = d.split('-'); return [parseInt(a[0], 10), parseInt(a[1], 10), parseInt(a[2], 10)]; }
     function ktime(t) {
@@ -772,16 +798,18 @@
     }
     function renderFriends() {
       var rows = friendsSorted().map(function (n) {
-        return '<div class="kk-row" data-f="' + esc(n) + '">' + avK(46) + '<div class="nm">' + esc(n) + '</div></div>';
+        return '<div class="kk-row" data-f="' + esc(n) + '">' + avK(46, n) + '<div class="nm">' + esc(n) + '</div></div>';
       }).join('');
       main.innerHTML = sbHtml('dark') +
         '<div class="kk-head"><h1>친구</h1><div class="ics">' + kic.search + kic.add + kic.music + kic.gear + '</div></div>' +
-        '<div class="kk-list"><div class="kk-row me" data-me="1">' + avK(54) + '<div class="nm"><b>' + esc(USER.name) + '</b></div></div>' +
+        '<div class="kk-list"><div class="kk-row me" data-me="1">' + avK(54, '__me') + '<div class="nm"><b>' + esc(USER.name) + '</b></div></div>' +
         '<div class="kk-sec">친구 ' + K.FRIENDS.length + '<span>' + '﹀' + '</span></div>' + rows + '<div style="height:20px"></div></div>' + barHtml();
       bindBar();
       qsa(main, '.kk-row[data-f]').forEach(function (r) {
         r.addEventListener('click', function () { openProfile(r.getAttribute('data-f')); });
       });
+      var meRow = qs(main, '.kk-row.me');
+      if (meRow) { meRow.addEventListener('click', function () { openProfile(USER.name, true); }); }
     }
     function chatRooms() {
       var list = [];
@@ -795,7 +823,7 @@
     function renderChats() {
       var rows = chatRooms().map(function (r) {
         var u = kkUnread[r.name] || 0;
-        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + esc(r.last.text) + '</div></div>' +
+        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52, r.name) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + esc(r.last.text) + '</div></div>' +
           '<div class="rt"><span class="tm">' + esc(listTime(r.last)) + '</span>' + (u > 0 ? '<i class="bd">' + u + '</i>' : '') + '</div></div>';
       }).join('');
       main.innerHTML = sbHtml('dark') +
@@ -807,13 +835,17 @@
       });
     }
     function render() { if (tab === 'friends') { renderFriends(); } else { renderChats(); } }
-    function openProfile(name) {
+    function openProfile(name, isMe) {
+      var key = isMe ? '__me' : name;
       var v = pushView(layer, sbHtml('light') +
         '<div class="kp-top"><button type="button" class="x" aria-label="닫기"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>' +
-        '<div class="kp-mid">' + avK(104) + '<div class="n">' + esc(name) + '</div></div>' +
-        '<div class="kp-btm"><button type="button" class="chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg><span>1:1 채팅</span></button></div>', 'kp');
-      qs(v, '.x').addEventListener('click', function () { popView(v); });
-      qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); });
+        '<div class="kp-mid"><div class="kp-avw">' + avK(104, key) + '<button type="button" class="kp-cam" aria-label="프로필 사진 변경"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l1.500-2.500h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.400"/></svg></button></div><div class="n">' + esc(name) + '</div></div>' +
+        '<div class="kp-btm">' + (isMe ? '<button type="button" class="chat" id="kpEdit"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span>프로필 사진 변경</span></button>' : '<button type="button" class="chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg><span>1:1 채팅</span></button>') + '</div>', 'kp');
+      function setPh() { qs(v, '.kp-avw .kk-av').outerHTML = avK(104, key); }
+      qs(v, '.kp-cam').addEventListener('click', function () { pickPhoto(key, setPh); });
+      qs(v, '.x').addEventListener('click', function () { popView(v, function () { render(); }); });
+      if (isMe) { qs(v, '#kpEdit').addEventListener('click', function () { pickPhoto(key, setPh); }); }
+      else { qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); }); }
     }
     function openRoom(name) {
       var room = K.ROOMS[name] || { msgs: [] };
@@ -828,7 +860,7 @@
         if (g.from === 'me') {
           html += '<div class="kr-msg me' + (first ? ' first' : '') + '">' + tm + '<div class="kb">' + esc(g.text) + '</div></div>';
         } else {
-          html += '<div class="kr-msg them' + (first ? ' first' : '') + '">' + (first ? avK(40) : '<div class="ksp"></div>') +
+          html += '<div class="kr-msg them' + (first ? ' first' : '') + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
             '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + esc(g.text) + '</div>' + tm + '</div></div></div>';
         }
         prevD = g.d; prevFrom = g.from;
