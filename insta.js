@@ -6,11 +6,11 @@
 window.INSTA_CONFIG = {
   bio: "",
   posts: [
-    { img: "./ig-post-1.jpg", date: "2026-08-15", likes: 1, caption: "나 놓고 혼자 파리가니까 좋아?",
+    { img: "./ig-post-3.jpg", date: "2026-08-15", likes: 1, caption: "나 놓고 혼자 파리가니까 좋아?",
       comments: [{ user: "jh_1107", text: "아앙 그래서 카톡 보내는 중...", time: "10주" }] },
     { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "하루종일 치이카와 치이키와 나보다 치이카와가 좋음?",
       comments: [{ user: "jh_1107", text: "아니라고 2947번째 반성 중입니다", time: "5주" }] },
-    { img: "./ig-post-3.jpg", date: "2026-06-18", likes: 1, caption: "\ud83d\udc95",
+    { img: "./ig-post-1.jpg", date: "2026-06-18", likes: 1, caption: "\ud83d\udc95",
       comments: [{ user: "jh_1107", text: "사랑해", time: "18주" }] }
   ],
   // 인스타 좋아요를 처음 누르면 트위터 쪽지로 오는 메시지
