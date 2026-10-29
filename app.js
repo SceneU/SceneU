@@ -914,8 +914,9 @@
     return g;
   }
   function kkBanner(name, text) {
+    qsa(phone, '.banner').forEach(function (o) { if (o.__kk) { o.remove(); } });
     var b = el('<div class="banner"><div class="bi" style="background:none">' + ICO.kakao + '</div><div><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div></div>');
-    phone.appendChild(b);
+    b.__kk = true; phone.appendChild(b);
     b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
     b.addEventListener('click', function () { if (b.__moved) { return; } b.remove(); goKk(name); });
     swipeAway(b);
@@ -945,7 +946,7 @@
         var n = el('<div class="notif pop" data-kk="' + esc(name) + '"><div class="ic">' + ICO.kakao + '</div><div class="tx"><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div><div class="tm">' + esc(g.t) + '</div></div>');
         box.insertBefore(n, box.firstChild); bindLockNotifs(); lockDense();
       }
-    } else if (!(ui && current === 'app' && curApp === 'kakao')) { kkBanner(name, text); }
+    } else { kkBanner(name, text); }
   }
   function kkReplies(name, list, done) {
     var i = 0;
@@ -1114,6 +1115,7 @@
         r.addEventListener('click', function () { openRoom(r.getAttribute('data-f')); });
       });
     }
+    function listRefresh() { if (!qs(layer, '.kr')) { render(); } }
     function render() { if (tab === 'friends') { renderFriends(); } else { renderChats(); } }
     function openProfile(name, isMe) {
       var key = isMe ? '__me' : name;
@@ -1224,10 +1226,10 @@
         inp.readOnly = true; inp.setAttribute('inputmode', 'none');
         qs(v, '.fld').addEventListener('click', function () { /* 이 방은 아직 직접 칠 수 없어요 */ });
       }
-      kkUI = { layer: layer, name: name, add: addMsg, refresh: function () {}, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
+      kkUI = { layer: layer, name: name, add: addMsg, refresh: listRefresh, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
       qs(v, '.back').addEventListener('click', function () { clearInterval(typeTimer); kkUI.name = null; popView(v, function () { render(); }); });
     }
-    kkUI = { layer: layer, name: null, add: function () {}, refresh: function () { if (!qs(layer, '.kr')) { render(); } }, field: function () {}, goRoom: function (n) { openRoom(n); } };
+    kkUI = { layer: layer, name: null, add: function () {}, refresh: listRefresh, field: function () {}, goRoom: function (n) { openRoom(n); } };
     render();
     if (kkGoto) { var g0 = kkGoto; kkGoto = null; tab = 'chats'; render(); openRoom(g0); }
   };
