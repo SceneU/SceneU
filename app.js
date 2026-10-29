@@ -848,11 +848,56 @@
     '최영재': [
       { auto: '나 지금 일어났어', reply: ['누나 인터넷 다 봤어?'] },
       { auto: '어 봤어 나 정환이랑 이야기 좀 해봐야겠다', reply: ['형이랑 이야기 잘 해봐'],
-        then: { wait: 5 * 60000, msgs: ['누나', '형 아침부터 엄청 혼나고 뛰어다녔어', '둘이 잘 해결했으면 좋겠어'] } },
+        then: { wait: 2 * 60000, msgs: ['누나', '형 아침부터 엄청 혼나고 뛰어다녔어', '둘이 잘 해결했으면 좋겠어'] } },
       { auto: '', reply: ['나는 형이랑 누나 둘 다 응원해'] },
       { auto: '', reply: [] }
     ]
   };
+  /* ---- 가짜 한글 키패드: 자동 입력할 때 아래에서 올라오고 눌리는 글쇠가 깜빡여요 ---- */
+  var HG = {
+    CHO: 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ',
+    JUNG: 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ',
+    JONG: ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'],
+    VSPLIT: { 'ㅘ': ['ㅗ', 'ㅏ'], 'ㅙ': ['ㅗ', 'ㅐ'], 'ㅚ': ['ㅗ', 'ㅣ'], 'ㅝ': ['ㅜ', 'ㅓ'], 'ㅞ': ['ㅜ', 'ㅔ'], 'ㅟ': ['ㅜ', 'ㅣ'], 'ㅢ': ['ㅡ', 'ㅣ'] },
+    FSPLIT: { 'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ', 'ㅎ'], 'ㄺ': ['ㄹ', 'ㄱ'], 'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'], 'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'], 'ㄿ': ['ㄹ', 'ㅍ'], 'ㅀ': ['ㄹ', 'ㅎ'], 'ㅄ': ['ㅂ', 'ㅅ'] },
+    SHIFT: { 'ㄲ': 'ㄱ', 'ㄸ': 'ㄷ', 'ㅃ': 'ㅂ', 'ㅆ': 'ㅅ', 'ㅉ': 'ㅈ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' }
+  };
+  function hgComp(c, j, f) { return String.fromCharCode(0xAC00 + (c * 21 + j) * 28 + f); }
+  /* 문장을 "눌러야 할 글쇠 순서 + 그때 입력창에 보일 글자"로 풀어요 */
+  function hgSteps(text) {
+    var out = [], pre = '';
+    for (var k = 0; k < text.length; k++) {
+      var ch = text.charAt(k), code = ch.charCodeAt(0);
+      if (code >= 0xAC00 && code <= 0xD7A3) {
+        var n = code - 0xAC00, fi = n % 28, ji = ((n - fi) / 28) % 21, ci = Math.floor(n / 588);
+        var cho = HG.CHO.charAt(ci), jung = HG.JUNG.charAt(ji), jong = HG.JONG[fi];
+        out.push({ v: pre + cho, keys: [cho] });
+        var vs = HG.VSPLIT[jung];
+        if (vs) { out.push({ v: pre + hgComp(ci, HG.JUNG.indexOf(vs[0]), 0), keys: [vs[0]] }); out.push({ v: pre + hgComp(ci, ji, 0), keys: [vs[1]] }); }
+        else { out.push({ v: pre + hgComp(ci, ji, 0), keys: [jung] }); }
+        if (fi) {
+          var fs = HG.FSPLIT[jong];
+          if (fs) { out.push({ v: pre + hgComp(ci, ji, HG.JONG.indexOf(fs[0])), keys: [fs[0]] }); out.push({ v: pre + hgComp(ci, ji, fi), keys: [fs[1]] }); }
+          else { out.push({ v: pre + hgComp(ci, ji, fi), keys: [jong] }); }
+        }
+        pre += ch;
+      } else if (ch === ' ') { pre += ch; out.push({ v: pre, keys: [' '] }); }
+      else if (code >= 0x3131 && code <= 0x3163) { pre += ch; out.push({ v: pre, keys: [ch] }); }
+      else { pre += ch; out.push({ v: pre, keys: [] }); }
+    }
+    return out;
+  }
+  function kkbHtml() {
+    var rows = ['ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ', 'ㅁㄴㅇㄹㅎㅗㅓㅏㅣ', 'ㅋㅌㅊㅍㅠㅜㅡ'];
+    function key(c) { return '<i class="k" data-j="' + c + '">' + c + '</i>'; }
+    return '<div class="kkb" id="kkb">' +
+      '<div class="kr1">' + rows[0].split('').map(key).join('') + '</div>' +
+      '<div class="kr2">' + rows[1].split('').map(key).join('') + '</div>' +
+      '<div class="kr3"><i class="k fn" data-j="SHIFT"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"><path d="M12 4l8 9h-5v7H9v-7H4z"/></svg></i>' + rows[2].split('').map(key).join('') +
+      '<i class="k fn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M13 9.500l5 5M18 9.500l-5 5" stroke-linecap="round"/></svg></i></div>' +
+      '<div class="kr4"><i class="k fn w">123</i><i class="k fn g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.800"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></i><i class="k sp" data-j=" ">스페이스</i><i class="k fn w r">줄바꿈</i></div>' +
+      '</div>';
+  }
   var kkS = {};          /* 방 이름 -> { step, blocked } */
   var kkUI = null;       /* 지금 열려 있는 카카오톡 화면 { layer, name, add(g), refresh(), goRoom(n) } */
   var KK_DATE = '2026-10-24';
@@ -1103,7 +1148,7 @@
       var v = pushView(layer, sbHtml('dark') +
         '<div class="kr-top"><button type="button" class="back">' + I.back + '</button><b>' + esc(name) + '</b><div class="ics">' + kic.search + kic.menu + '</div></div>' +
         '<div class="kr-body" id="krb">' + html + '<div style="height:12px"></div></div>' +
-        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><input type="text" id="krI" placeholder="메시지 입력" autocomplete="off" autocapitalize="off" enterkeyhint="send">' + kic.emo + '</div><span class="hs" id="krH">' + kic.hash + '</span></div>', 'kr');
+        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><input type="text" id="krI" placeholder="메시지 입력" autocomplete="off" autocapitalize="off" enterkeyhint="send">' + kic.emo + '</div><span class="hs" id="krH">' + kic.hash + '</span></div>' + (kkState(name) ? kkbHtml() : ''), 'kr');
       v.style.background = '#b2c7da';
       var body = qs(v, '#krb');
       requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
@@ -1111,6 +1156,9 @@
       var inp = qs(v, '#krI'), hs = qs(v, '#krH'), typing = false, typeTimer = null;
       var st = kkState(name);
       function scroll() { body.scrollTop = body.scrollHeight; }
+      function kbShow() { v.classList.add('kbup'); setTimeout(scroll, 120); setTimeout(scroll, 400); }
+      function kbHide() { v.classList.remove('kbup'); }
+      body.addEventListener('click', function () { if (!typing) { kbHide(); } });
       function addMsg(g) {
         var prev = room.msgs[room.msgs.length - 2];
         if (prev && prev.from === g.from && prev.d === g.d && prev.t === g.t) {
@@ -1131,7 +1179,7 @@
         var text = String(inp.value || '').replace(/^\s+|\s+$/g, '');
         if (!text || typing) { return; }
         var g = kkPush(name, 'me', text); inp.value = '';
-        addMsg(g); syncSend(); inp.blur();
+        addMsg(g); syncSend(); inp.blur(); kbHide();
         kkAfterSend(name);
       }
       /* 입력창 상태: 막힘 / 자동 입력(누르면 쳐짐) / 직접 입력 */
@@ -1150,11 +1198,23 @@
           var stp = KK_SCRIPT[name][st.step];
           if (st.blocked || typing || !stp || !stp.auto || inp.value) { return; }
           inp.blur();
-          var txt = stp.auto, i = 0; typing = true; syncSend();
-          typeTimer = setInterval(function () {
-            i++; inp.value = txt.slice(0, i); syncSend();
-            if (i >= txt.length) { clearInterval(typeTimer); typing = false; syncSend(); }
-          }, 110);
+          var steps = hgSteps(stp.auto), i = 0; typing = true; syncSend();
+          kbShow();
+          function press(keys) {
+            keys.forEach(function (kk) {
+              var sh = HG.SHIFT[kk], base = sh || kk;
+              var ks = qsa(v, '.kkb .k[data-j="' + base + '"]');
+              var tg = ks[0]; if (tg) { tg.classList.add('p'); setTimeout(function () { tg.classList.remove('p'); }, 110); }
+              if (sh) { var sf = qs(v, '.kkb .k[data-j="SHIFT"]'); if (sf) { sf.classList.add('p'); setTimeout(function () { sf.classList.remove('p'); }, 110); } }
+            });
+          }
+          function nextKey() {
+            if (!typing) { return; }
+            if (i >= steps.length) { typing = false; syncSend(); return; }
+            var s0 = steps[i++]; inp.value = s0.v; press(s0.keys); syncSend();
+            typeTimer = setTimeout(nextKey, (s0.keys[0] === ' ' ? 150 : 95) + Math.random() * 90);
+          }
+          typeTimer = setTimeout(nextKey, 520);
         });
         inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
         inp.addEventListener('input', syncSend);
