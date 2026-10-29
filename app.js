@@ -694,6 +694,7 @@
      ========================================================= */
   var liked = {};
   var xCtx = null;
+  var notiOpen = false;
   var dmArrived = parseInt(store.get('ourday.dm') || '0', 10) || 0;
   var dmStarted = false;
   var dmRead = {};
@@ -714,7 +715,7 @@
   function likeCount(t) { return t.like + (liked[t.id] ? 1 : 0); }
   function actsHtml(t, opts) {
     opts = opts || {};
-    var rtAttr = t.hasQuotes ? ' data-lp="1"' : '';
+    var rtAttr = ' data-lp="1"';
     var rtCount = t.hasQuotes ? '<span class="rtn" data-act="quotes">' + compact(t.rt) + '</span>' : '<span>' + compact(t.rt) + '</span>';
     return '<div class="acts"><span class="a">' + I.reply + '</span>' +
       '<button type="button"' + rtAttr + '>' + I.repost + rtCount + '</button>' +
@@ -774,9 +775,9 @@
       var n = unreadCount();
       return '<div class="x-bar">' +
         '<button type="button" data-go="home">' + (ctx.tab === 'home' ? I.homeOn : I.home) + '<i class="rd"></i></button>' +
-        '<button type="button" data-soon="1">' + I.search.replace('width="18" height="18"', 'width="26" height="26"') + '</button>' +
+        '<button type="button" data-go="search">' + I.search.replace('width="18" height="18"', 'width="26" height="26"').replace('stroke-width="2.4"', ctx.tab === 'search' ? 'stroke-width="3.4"' : 'stroke-width="2.4"') + '</button>' +
         '<button type="button" data-soon="1"><span class="pf">' + I.person.replace('<svg ', '<svg width="20" height="20" ').replace('fill="currentColor"', 'fill="#fff"') + '</span></button>' +
-        '<button type="button" data-soon="1">' + I.bell + '</button>' +
+        '<button type="button" data-go="noti">' + (ctx.tab === 'noti' ? I.bell.replace('stroke-width="2"', 'stroke-width="3"') : I.bell) + (notiOpen || ctx.tab === 'noti' ? '' : '<span class="bg2" style="display:flex">' + (C.NOTIS || []).length + '</span>') + '</button>' +
         '<button type="button" data-go="dm">' + (ctx.tab === 'dm' ? I.mailOn : I.mail) + '<span class="bg2" id="dmBadge" style="display:' + (n > 0 ? 'flex' : 'none') + '">' + n + '</span></button></div>';
     }
     function bindBar() {
@@ -821,7 +822,62 @@
       });
     }
     ctx.renderDM = renderDM;
-    function render() { if (ctx.tab === 'home') { renderHome(); } else { renderDM(); } }
+    function renderSearch() {
+      var gear = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 8.800a3.200 3.200 0 100 6.400 3.200 3.200 0 000-6.400z"/><path d="M19.400 13a7.800 7.800 0 000-2l2-1.500-2-3.400-2.300.9a7.600 7.600 0 00-1.700-1l-.4-2.500h-4l-.4 2.500a7.600 7.600 0 00-1.700 1l-2.300-.9-2 3.400 2 1.500a7.800 7.800 0 000 2l-2 1.500 2 3.400 2.300-.9c.5.400 1.100.7 1.700 1l.4 2.500h4l.4-2.500c.6-.3 1.200-.6 1.700-1l2.300.9 2-3.400z"/></svg>';
+      var tabs = ['탐색', '실시간 트렌드', '뉴스', '스포츠', '엔터테인먼트'].map(function (n, i) { return '<span class="' + (i === 0 ? 'on' : '') + '"><em>' + n + '</em></span>'; }).join('');
+      var rows = (C.TRENDS || []).map(function (w) {
+        return '<div class="trd" data-q="' + esc(w) + '"><div><b>' + esc(w) + '</b><span>대한민국에서 트렌드 중</span></div><i>' + '···' + '</i></div>';
+      }).join('');
+      base.innerHTML = sbHtml('dark') +
+        '<div class="ex-top"><div class="r1"><span class="me2">' + I.person.replace('<svg ', '<svg width="22" height="22" ').replace('fill="currentColor"', 'fill="#fff"') + '</span>' +
+        '<div class="sbx">' + I.search + '<span>검색</span></div><span class="gr2">' + gear + '</span></div><div class="tabs">' + tabs + '</div></div>' +
+        '<div class="ex-list">' + rows + '</div>' + barHtml();
+      bindBar();
+      qsa(base, '.trd').forEach(function (r) {
+        r.addEventListener('click', function () { openResults(r.getAttribute('data-q')); });
+      });
+    }
+
+    /* 검색 결과: 가상 기사 링크가 걸린 게시물 목록. 카드를 누르면 사파리에 넣어둔 가상 기사가 열려요 */
+    function openResults(term) {
+      var handles = ['dailystar_news', 'yeonyetalk_kr', 'newswave_live', 'dailystar_news', 'yeonyetalk_kr'];
+      var colors = ['#1d3557', '#8d5a97', '#2a7f62', '#b5483a', '#5a6b7b'];
+      var posts = C.NEWS.map(function (n, i) {
+        var age = String(n.time).replace(/\s*전$/, '');
+        var big = i % 2 === 0;
+        var dom = (handles[i % handles.length] || 'news').replace('_', '-') + '.invalid';
+        var card = big
+          ? '<div class="lc big" data-i="' + i + '"><div class="im">' + imgTag(n.img) + '<span class="cap">' + esc(n.title) + '</span></div></div><div class="dom">출처: ' + esc(dom) + '</div>'
+          : '<div class="lc row" data-i="' + i + '"><div class="im">' + imgTag(n.img) + '</div><div class="tx"><b>' + esc(n.title) + '</b><span>' + esc(dom) + '</span></div></div>';
+        return '<article class="srp"><div class="pa" style="background:' + colors[i % colors.length] + '">' + esc(String(n.press).charAt(0)) + '</div>' +
+          '<div class="pb"><div class="hd"><b>' + esc(n.press) + '</b><span>@' + esc(handles[i % handles.length]) + ' · ' + esc(age) + '</span></div>' +
+          '<div class="pt">' + esc(n.title) + ' (출처: ' + esc(n.press) + ')</div>' + card +
+          '<div class="acts"><span class="a">' + I.reply + '</span><span class="a">' + I.repost + '</span><span class="a">' + I.like + '</span><span class="a">' + I.views + '<span>' + (3 + i * 2) + '</span></span><span class="a">' + I.bm + '</span><span class="a">' + I.shr + '</span></div></div></article>';
+      }).join('');
+      var v = pushView(root, sbHtml('dark') +
+        '<div class="sr-top"><div class="r1"><button type="button" class="back" style="color:#0f1419">' + I.back + '</button><div class="sbx">' + I.search + '<span class="q">' + esc(term) + '</span></div><span class="mo">···</span></div>' +
+        '<div class="tabs"><span class="on"><em>인기</em></span><span><em>최신</em></span><span><em>사용자</em></span><span><em>미디어</em></span><span><em>리스트</em></span></div></div>' +
+        '<div class="sr-list">' + posts + '</div>', 'xa');
+      v.style.background = '#fff';
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+      qsa(v, '.lc').forEach(function (c) {
+        c.addEventListener('click', function () { openArticle(root, C.NEWS[parseInt(c.getAttribute('data-i'), 10)]); });
+      });
+    }
+    function renderNoti() {
+      notiOpen = true;
+      var person = '<svg width="30" height="30" viewBox="0 0 24 24" fill="#1d9bf0"><circle cx="9" cy="8" r="4"/><path d="M1.500 20.500c.6-4 3.600-6 7.500-6s6.900 2 7.500 6z"/><path d="M19 7v6M16 10h6" stroke="#1d9bf0" stroke-width="2.200" stroke-linecap="round"/></svg>';
+      var rows = (C.NOTIS || []).map(function (n, i) {
+        var av = n.who.map(function () { return '<span class="nav">' + I.person.replace('<svg ', '<svg width="18" height="18" ').replace('fill="currentColor"', 'fill="#fff"') + '</span>'; }).join('');
+        var txt = '<b>' + esc(n.who[0]) + '</b>' + (n.more > 0 ? '님 외 ' + n.more + '명이' : '님이') + ' 회원님을 팔로우했습니다';
+        return '<div class="nrow' + (i < 8 ? ' new' : '') + '"><div class="ni">' + person + '</div><div class="nb"><div class="navs">' + av + '</div><div class="nt">' + txt + ' <span>· ' + esc(n.time) + '</span></div></div></div>';
+      }).join('');
+      base.innerHTML = sbHtml('dark') +
+        '<div class="no-top"><div class="t1">알림</div><div class="tabs"><span class="on"><em>전체</em></span><span><em>인증됨</em></span><span><em>멘션</em></span></div></div>' +
+        '<div class="no-list">' + rows + '</div>' + barHtml();
+      bindBar();
+    }
+    function render() { if (ctx.tab === 'home') { renderHome(); } else if (ctx.tab === 'search') { renderSearch(); } else if (ctx.tab === 'noti') { renderNoti(); } else { renderDM(); } }
 
     /* 피드/상세에서 쓰는 공통 동작: 마음, 트윗 열기, 재게시 숫자 */
     function bindFeed(scope) {
@@ -847,12 +903,12 @@
         });
       });
       qsa(scope, '[data-act="quotes"]').forEach(function (s) {
-        s.addEventListener('click', function (e) { e.stopPropagation(); openActivity(); });
+        s.addEventListener('click', function (e) { e.stopPropagation(); var art = s.closest('.tw'); openActivity(art ? art.getAttribute('data-id') : null); });
       });
       qsa(scope, '[data-lp]').forEach(function (b) {
         var timer = null;
         b.addEventListener('pointerdown', function () {
-          timer = setTimeout(function () { timer = null; var art = b.closest('.tw'); if (art) { art.__lp = true; } openActivity(); }, 500);
+          timer = setTimeout(function () { timer = null; var art = b.closest('.tw'); if (art) { art.__lp = true; } openActivity(art ? art.getAttribute('data-id') : null); }, 500);
         });
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
           b.addEventListener(ev, function () { if (timer) { clearTimeout(timer); timer = null; } });
@@ -876,7 +932,7 @@
         '<div class="scroll"><div class="dbody"><div class="au">' + xav(t.avatar, t.avatarFallback) + '<div><b>' + esc(t.name) + '</b><span>@' + esc(t.handle) + '</span></div></div>' +
         '<div class="big">' + rich(t.text) + '</div>' + media +
         '<div class="meta">' + esc(t.detailTime) + ' · 2026. 10. 24. · 조회 <b>' + t.views + '</b>회</div>' +
-        '<div class="acts"><span class="a" style="opacity:.35">' + I.reply + '</span><button type="button" class="gr"' + (t.hasQuotes ? ' data-lp="1"' : '') + '>' + I.repost + rtN + '</button>' +
+        '<div class="acts"><span class="a" style="opacity:.35">' + I.reply + '</span><button type="button" class="gr"' + ' data-lp="1"' + '>' + I.repost + rtN + '</button>' +
         '<button type="button" class="lk' + (liked[t.id] ? ' on' : '') + '" data-act="like" data-id="' + t.id + '">' + I.like + '<span>' + comma(likeCount(t)) + '</span></button>' +
         '<span class="a">' + I.bm + '<span>' + comma(t.bm) + '</span></span><span class="a">' + I.shr + '</span></div>' +
         '<div class="lockbox">' + I.lockSm + '<span>일부 계정만 답글을 쓸 수 있습니다.</span></div>' + replies + '</div></div>', 'xa');
@@ -895,20 +951,23 @@
           });
         });
       });
-      qsa(v, '[data-act="quotes"]').forEach(function (s) { s.addEventListener('click', function (e) { e.stopPropagation(); openActivity(); }); });
+      qsa(v, '[data-act="quotes"]').forEach(function (s) { s.addEventListener('click', function (e) { e.stopPropagation(); openActivity(t.id); }); });
       qsa(v, '[data-lp]').forEach(function (b) {
         var timer = null;
-        b.addEventListener('pointerdown', function () { timer = setTimeout(function () { timer = null; openActivity(); }, 500); });
+        b.addEventListener('pointerdown', function () { timer = setTimeout(function () { timer = null; openActivity(t.id); }, 500); });
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, function () { if (timer) { clearTimeout(timer); timer = null; } }); });
       });
     }
 
     /* 게시 활동 (인용 / 재게시) */
-    function openActivity() {
+    function openActivity(tid) {
       if (qs(root, '.view.act')) { return; }
-      var t6 = C.TWEETS.filter(function (x) { return x.hasQuotes; })[0];
+      var tw = C.TWEETS.filter(function (x) { return x.id === tid; })[0] || C.TWEETS.filter(function (x) { return x.hasQuotes; })[0];
+      var t6 = tw;
+      var hasQ = !!tw.hasQuotes;
       var mini = (t6.images || []).map(function (s) { return '<div>' + imgTag(s) + '</div>'; }).join('');
       function quotesHtml() {
+        if (!hasQ) { return '<div class="act-empty"><h2>아직 인용 없음</h2><p>다른 사람의 게시물을 공유할 때 본인의 의견을 추가하면 여기에 표시됩니다.</p></div>'; }
         return C.QUOTES.map(function (q) {
           return '<div class="qt">' + xavDefault() + '<div style="flex:1;min-width:0"><div class="hd" style="display:flex;gap:4px;font-size:15px"><b>' + esc(q.name) + '</b><span style="color:#536471">@' + esc(q.handle) + ' · ' + esc(q.age) + '</span></div>' +
             '<div class="tx" style="font-size:15px;line-height:20px;margin-top:2px">' + esc(q.text) + '</div>' +
@@ -917,19 +976,24 @@
         }).join('');
       }
       function repostsHtml() {
+        if (!hasQ) { return '<div class="act-empty"><h2>마음에 드는 게시물 널리 알리기</h2><p>다른 사람의 게시물을 재게시해 내 타임라인에서 공유하세요. 재게시하면 여기에 표시됩니다.</p></div>'; }
         return C.REPOSTS.map(function (r) {
           return '<div class="rep-row">' + xavDefault() + '<div><b>' + esc(r.name) + '</b><span>@' + esc(r.handle) + '</span></div></div>';
         }).join('');
       }
       var v = pushView(root, sbHtml('dark') +
         '<div class="act-top"><div class="t1"><button type="button" class="bk back" style="color:#0f1419;padding:0">' + I.back + '</button>게시 활동<span class="so">' + I.sort + '</span></div>' +
-        '<div class="t2"><button type="button" data-t="q" class="on">' + I.pencil + '인용</button><button type="button" data-t="r">재게시</button></div></div>' +
+        '<div class="t2"><button type="button" data-t="q" class="on">' + I.pencil + '<span>인용</span></button><button type="button" data-t="r"><span>재게시</span></button></div></div>' +
         '<div class="act-list" id="actList">' + quotesHtml() + '</div>', 'xa act');
       v.style.background = '#fff';
       qs(v, '.bk').addEventListener('click', function () { popView(v); });
       qsa(v, '.t2 button').forEach(function (b) {
         b.addEventListener('click', function () {
-          qsa(v, '.t2 button').forEach(function (x) { x.classList.toggle('on', x === b); });
+          qsa(v, '.t2 button').forEach(function (x) {
+            x.classList.toggle('on', x === b);
+            var ic = x.querySelector('svg'); if (ic) { ic.remove(); }
+            if (x === b) { x.insertAdjacentHTML('afterbegin', x.getAttribute('data-t') === 'q' ? I.pencil : I.repost.replace('<svg ', '<svg style="width:20px;height:20px;flex:none" ')); }
+          });
           qs(v, '#actList').innerHTML = b.getAttribute('data-t') === 'q' ? quotesHtml() : repostsHtml();
           qs(v, '#actList').scrollTop = 0;
         });
