@@ -564,21 +564,20 @@ window.CONFIG = {
     { date: "2026-04-05", img: "./ig-story-4.jpg" },
     { date: "2026-06-18", img: "./ig-story-5.jpg" },
     { date: "2026-08-30", img: "./ig-story-6.jpg" }
-  ],
-  // requests: ["아이디1","아이디2",...]  ← 팔로우 요청 목록을 직접 정하고 싶을 때만 추가 (없으면 알계 아이디 47개 자동 생성)
-  dm: { user: "jh_1107", msgs: [   // from: "them"=상대, "me"=플레이어
-    // kind: "story"=스토리 답장 / "mention"=스토리 태그(언급) / "share"=스토리 공유 → 전부 만료된 카드로 표시, text는 비워도 됨
+  ],  // requests: ["아이디1","아이디2",...]  ← 팔로우 요청을 직접 정할 때만 (없으면 자동 47개)
+  // kind: mention=스토리 태그 / share=스토리 공유 / story=스토리 답장 → 만료 표시, kind 없이 text만 있으면 일반 대화
+  dm: { user: "jh_1107", msgs: [
     { d: "2026-08-12", t: "22:41", from: "them", kind: "mention", text: "" },
-    { d: "2026-08-12", t: "22:43", from: "them", kind: "story", text: "스토리 답장 내용을 여기에 적어요" },
-    { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "태그한 스토리에 대한 멘트를 여기에 적어요" },
-    { d: "2026-09-02", t: "21:14", from: "me", text: "내 답장 내용을 여기에 적어요" },
-    { d: "2026-09-11", t: "19:05", from: "them", kind: "share", text: "" },
-    { d: "2026-09-20", t: "23:02", from: "them", kind: "story", text: "또 다른 스토리 답장 내용을 여기에 적어요" },
+    { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "" },
+    { d: "2026-09-11", t: "19:05", from: "them", kind: "mention", text: "" },
+    { d: "2026-09-20", t: "23:02", from: "them", kind: "mention", text: "" },
     { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
-    { d: "2026-10-01", t: "18:30", from: "me", kind: "share", text: "공유한 스토리에 붙인 멘트를 여기에 적어요" },
-    { d: "2026-10-06", t: "08:30", from: "them", kind: "story", text: "마지막 스토리 답장 내용을 여기에 적어요" },
+    { d: "2026-10-01", t: "18:30", from: "me", kind: "share", story: 3, text: "" },
+    { d: "2026-10-06", t: "08:30", from: "them", text: "대화 내용을 여기에 적어요" },
+    { d: "2026-10-06", t: "08:41", from: "me", text: "내 답장을 여기에 적어요" },
     { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
   ] }
+
 },
   DM_FIRST_DELAY: 4000,   // 처음 들어가고 첫 쪽지가 오기까지 (ms)
   DM_INTERVAL: 3000       // 이후 쪽지 도착 간격 (ms)
