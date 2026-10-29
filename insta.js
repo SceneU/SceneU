@@ -14,7 +14,7 @@ window.INSTA_CONFIG = {
       comments: [{ user: "jh_1107", text: "사랑해", time: "18주" }] }
   ],
   // 인스타 좋아요를 처음 누르면 트위터 쪽지로 오는 메시지
-  likeDm: { name: "jh_1107", handle: "jh_1107", msgs: ["인스타는 하면서 트위터는 안 보네?"] },
+  likeDm: { name: ".", handle: "djehfos", msgs: ["인스타는 하면서 트위터는 안 보네?"] },
   stories: [
     { date: "2025-10-24", img: "./ig-story-1.jpg" },
     { date: "2025-12-25", img: "./ig-story-2.jpg" },
@@ -32,8 +32,8 @@ window.INSTA_CONFIG = {
       { d: "2026-09-20", t: "23:02", from: "them", kind: "mention", text: "" },
       { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
       { d: "2026-10-01", t: "18:30", from: "me", kind: "share", story: 3, text: "" },
-      { d: "2026-10-06", t: "08:30", from: "them", text: "에휴" },
-      { d: "2026-10-06", t: "08:41", from: "me", text: "아 재밌다" },
+      { d: "2026-10-06", t: "08:30", from: "them", text: "사랑해" },
+      { d: "2026-10-06", t: "08:41", from: "me", text: "나도" },
       { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
     ]
   }
