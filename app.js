@@ -5,9 +5,55 @@
 (function () {
   'use strict';
   var C = window.CONFIG;
+  /* config.js 에 문법 오류가 있으면 검은 화면 대신 안내를 보여줘요 */
+  if (!C) {
+    var errBox = document.getElementById('phone');
+    if (errBox) {
+      errBox.innerHTML = '<div style="position:absolute;inset:0;background:#111;color:#fff;padding:90px 26px;font:16px/1.7 -apple-system,sans-serif">' +
+        '<b style="font-size:20px">config.js 를 읽지 못했어요</b><br><br>config.js 안에 쉼표( , ), 괄호( { } [ ] ), 따옴표( &quot; ) 가 빠졌거나 남아 있을 가능성이 커요.<br><br>' +
+        '최근에 config.js 에 붙여넣은 부분의 앞뒤를 확인해 주세요. 특히 <b>] },</b> 가 두 번 남아 있지 않은지 봐주세요.</div>';
+    }
+    return;
+  }
   /* config.js 에 없는 새 항목은 여기 기본값을 써요 (config.js 를 덜 고쳐도 화면이 뜨게) */
   var DEF = {"SEARCH_KEYWORD":"ㅇㅇ","TRENDS":["ㅇㅇ연애","여친비계","ㅇㅇ여친","비밀연애"],"NOTIS":[{"who":["user48201937","a8472910","user_3047182"],"more":14,"time":"방금"},{"who":["k29481736"],"more":0,"time":"1분"},{"who":["user90183746","x_5029381"],"more":8,"time":"1분"},{"who":["z_4410927"],"more":0,"time":"2분"},{"who":["user_7731205","m_3829104","user61820493"],"more":21,"time":"2분"},{"who":["q8830175"],"more":0,"time":"3분"},{"who":["user_2290471","t_9017263"],"more":5,"time":"3분"},{"who":["user73910284"],"more":0,"time":"4분"},{"who":["w_6150382","user_1048326","r_7720914"],"more":17,"time":"5분"},{"who":["user_5503817"],"more":0,"time":"5분"},{"who":["n_2087154","user39174026"],"more":11,"time":"6분"},{"who":["user_8841029"],"more":0,"time":"7분"},{"who":["p_4619375","user_9052718","d_1830462"],"more":9,"time":"8분"},{"who":["user24680135"],"more":0,"time":"9분"},{"who":["s_7305921","user_6617240"],"more":19,"time":"11분"},{"who":["user_3158064"],"more":0,"time":"12분"},{"who":["c_9284017","user58203916","b_4471028"],"more":6,"time":"14분"},{"who":["user_1196347"],"more":0,"time":"16분"}],"KAKAO":{"FRIENDS":["신정환","최영재","이경민","한지훈","김도훈","한진","류인아","엄마","아빠"],"ROOMS":{"엄마":{"unread":1,"msgs":[{"d":"2023-11-12","t":"19:20","from":"them","text":"밥은 먹었니"},{"d":"2023-11-12","t":"19:21","from":"me","text":"먹었어 엄마는?"},{"d":"2023-11-12","t":"19:22","from":"them","text":"엄마도 먹었지 김장 때 올 수 있지?"},{"d":"2023-11-12","t":"19:25","from":"me","text":"응 그날 갈게"},{"d":"2023-11-12","t":"19:26","from":"them","text":"그래 오면 김치 챙겨줄게"},{"d":"2024-02-10","t":"08:40","from":"them","text":"설에 몇 시쯤 도착하니"},{"d":"2024-02-10","t":"08:52","from":"me","text":"점심 전에 갈 것 같아"},{"d":"2024-02-10","t":"08:53","from":"them","text":"전 부쳐놓을게 천천히 와"},{"d":"2024-05-08","t":"18:30","from":"me","text":"엄마 아빠 어버이날 고마워요 사랑해요"},{"d":"2024-05-08","t":"18:34","from":"them","text":"아이고 우리 새끼 엄마도 사랑한다"},{"d":"2024-08-03","t":"17:05","from":"them","text":"엄마가 반찬 해서 문 앞에 두고 간다"},{"d":"2024-08-03","t":"17:40","from":"me","text":"방금 봤어 잘 먹을게"},{"d":"2024-08-03","t":"17:41","from":"them","text":"냉장고에 바로 넣어"},{"d":"2025-01-20","t":"09:15","from":"them","text":"요즘 감기 유행이라던데 몸은 괜찮니"},{"d":"2025-01-20","t":"09:30","from":"me","text":"괜찮아 걱정 마"},{"d":"2025-01-20","t":"09:31","from":"them","text":"약 챙겨 먹고 따뜻하게 자"},{"d":"2025-06-08","t":"11:20","from":"them","text":"이번 주말에 올 수 있어? 아빠가 삼겹살 구워준대"},{"d":"2025-06-08","t":"11:45","from":"me","text":"토요일에 갈게"},{"d":"2025-11-02","t":"14:10","from":"them","text":"김장 올해도 할 거야"},{"d":"2025-11-02","t":"14:30","from":"me","text":"날짜 정해지면 말해줘"},{"d":"2026-03-15","t":"10:05","from":"them","text":"날 풀렸다고 얇게 입고 다니지 마라"},{"d":"2026-03-15","t":"10:12","from":"me","text":"알았어~"},{"d":"2026-08-22","t":"16:50","from":"them","text":"반찬 현관 앞에 두고 간다"},{"d":"2026-08-22","t":"17:20","from":"me","text":"고마워 엄마 잘 먹을게"},{"d":"2026-08-22","t":"17:21","from":"them","text":"밥 거르지 말고"},{"d":"2026-10-23","t":"08:10","from":"them","text":"요즘 아침저녁으로 쌀쌀하다 옷 따뜻하게 입고 다녀"},{"d":"2026-10-23","t":"08:11","from":"them","text":"주말에 시간 되면 집에 한번 와"}]},"아빠":{"unread":0,"msgs":[{"d":"2023-12-02","t":"21:10","from":"them","text":"어디냐"},{"d":"2023-12-02","t":"21:12","from":"me","text":"집이에요"},{"d":"2023-12-02","t":"21:13","from":"them","text":"그래 조심히 다녀라"},{"d":"2024-03-17","t":"15:20","from":"them","text":"차 점검 받았냐"},{"d":"2024-03-17","t":"15:40","from":"me","text":"아직요 이번 주에 받을게요"},{"d":"2024-03-17","t":"15:41","from":"them","text":"엔진오일 갈 때 됐다"},{"d":"2024-09-14","t":"11:05","from":"them","text":"추석 전에 시간 되면 와라"},{"d":"2024-09-14","t":"11:30","from":"me","text":"네 갈게요"},{"d":"2025-05-08","t":"19:00","from":"them","text":"어버이날 뭐 필요 없다 몸이나 챙겨라"},{"d":"2025-05-08","t":"19:20","from":"me","text":"그래도 용돈 보냈어요"},{"d":"2025-05-08","t":"19:22","from":"them","text":"고맙다"},{"d":"2025-12-24","t":"07:30","from":"them","text":"눈 온다 길 미끄러우니 운전 조심해라"},{"d":"2026-06-10","t":"13:00","from":"them","text":"아빠가 호박 따서 엄마 편에 보냈다"},{"d":"2026-06-10","t":"13:25","from":"me","text":"잘 먹을게요"},{"d":"2026-10-12","t":"20:30","from":"them","text":"밥은 먹었냐"},{"d":"2026-10-12","t":"20:40","from":"me","text":"먹었어요"},{"d":"2026-10-12","t":"20:41","from":"them","text":"그래 들어가라"}]},"신정환":{"unread":0,"msgs":[]},"최영재":{"unread":0,"msgs":[]},"류인아":{"unread":0,"msgs":[]},"이경민":{"unread":0,"msgs":[]},"한지훈":{"unread":0,"msgs":[]}}}};
   Object.keys(DEF).forEach(function (k) { if (C[k] === undefined) { C[k] = DEF[k]; } });
+  /* 인스타그램 기본 내용 (config.js 에 INSTA 가 없을 때 이 내용을 써요. 고치려면 config.js 에 INSTA 를 붙여넣고 수정하세요) */
+  var IG_DEF = {
+    bio: "",
+    posts: [
+      { img: "./ig-post-1.jpg", date: "2026-08-15", likes: 1, caption: "첫 번째 게시물 멘트를 여기에 적어요",
+        comments: [{ user: "jh_1107", text: "첫 번째 게시물 댓글을 여기에 적어요", time: "10주" }] },
+      { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "두 번째 게시물 멘트를 여기에 적어요",
+        comments: [{ user: "jh_1107", text: "두 번째 게시물 댓글을 여기에 적어요", time: "5주" }] },
+      { img: "./ig-post-3.jpg", date: "2026-10-05", likes: 1, caption: "세 번째 게시물 멘트를 여기에 적어요",
+        comments: [{ user: "jh_1107", text: "세 번째 게시물 댓글을 여기에 적어요", time: "2주" }] }
+    ],
+    stories: [
+      { date: "2025-10-24", img: "./ig-story-1.jpg" },
+      { date: "2025-12-25", img: "./ig-story-2.jpg" },
+      { date: "2026-02-14", img: "./ig-story-3.jpg" },
+      { date: "2026-04-05", img: "./ig-story-4.jpg" },
+      { date: "2026-06-18", img: "./ig-story-5.jpg" },
+      { date: "2026-08-30", img: "./ig-story-6.jpg" }
+    ],
+    dm: {
+      user: "jh_1107",
+      msgs: [
+        { d: "2026-08-12", t: "22:41", from: "them", kind: "mention", text: "" },
+        { d: "2026-08-12", t: "22:43", from: "them", kind: "story", text: "스토리 답장 내용을 여기에 적어요" },
+        { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "태그한 스토리에 대한 멘트를 여기에 적어요" },
+        { d: "2026-09-02", t: "21:14", from: "me", text: "내 답장 내용을 여기에 적어요" },
+        { d: "2026-09-11", t: "19:05", from: "them", kind: "share", text: "" },
+        { d: "2026-09-20", t: "23:02", from: "them", kind: "story", text: "또 다른 스토리 답장 내용을 여기에 적어요" },
+        { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
+        { d: "2026-10-01", t: "18:30", from: "me", kind: "share", text: "공유한 스토리에 붙인 멘트를 여기에 적어요" },
+        { d: "2026-10-06", t: "08:30", from: "them", kind: "story", text: "마지막 스토리 답장 내용을 여기에 적어요" },
+        { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
+      ]
+    }
+  };
+  if (!C.INSTA) { C.INSTA = IG_DEF; }
   var LIVE_DMS = [
     { id: "d11", name: "user_2048173", handle: "user_2048173", time: "08:00", followers: 0, following: 1, posts: 0, msgs: ["방금 또 올라왔어요 보셨어요?"] },
     { id: "d12", name: "p5517302",     handle: "p5517302",     time: "08:00", followers: 1, following: 2, posts: 0, msgs: ["입장 안 내시나요?"] },
@@ -252,6 +298,7 @@
       var more = [];
       (C.TWEETS || []).forEach(function (t) { (t.images || []).forEach(function (x) { more.push(x); }); });
       (C.GALLERY || []).forEach(function (p) { if (p && p.src) { more.push(p.src); } });
+      if (C.INSTA) { (C.INSTA.posts || []).forEach(function (p) { if (p.img) { more.push(p.img); } }); (C.INSTA.stories || []).forEach(function (p) { if (p.img) { more.push(p.img); } }); }
       more.forEach(function (x) { resolve(x, function () {}); });
     }, 400);
   }
@@ -480,6 +527,10 @@
     if (current !== 'home') { return; }
     if (id === 'youtube') {
       try { window.open(C.YOUTUBE_URL, '_blank', 'noopener'); } catch (e) {}
+      return;
+    }
+    if (id === 'weverse') {
+      try { window.open(C.WEVERSE_URL || 'https://weverse.io/tws/profile/44e29f1d7d5a64908dc4674a53e53d97', '_blank', 'noopener'); } catch (e) {}
       return;
     }
     if (!IMPL[id]) { soon(); return; }
@@ -932,6 +983,235 @@
   };
 
   /* =========================================================
+     인스타그램 앱 (비공개 계정: 프로필 / 게시물 / 스토리 보관함 / 쪽지만 눌러져요)
+     ========================================================= */
+  IMPL.instagram = function (layer) {
+    setHB('dark');
+    var G = C.INSTA || IG_DEF;
+    var ME = USER.igId || 'me';
+    var TODAY = new Date(2026, 9, 24);
+    var tab = 'home';
+    var RQ = G.requests;
+    if (!RQ || !RQ.length) {
+      var seed = 20261029, L = 'abcdefghijklmnopqrstuvwxyz', D = '0123456789';
+      function rnd(n) { seed = (seed * 1103515245 + 12345) % 2147483648; return Math.floor(seed / 65536) % n; }
+      function pick(set, n) { var o = ''; for (var i = 0; i < n; i++) { o += set.charAt(rnd(set.length)); } return o; }
+      var seen = {};
+      RQ = [];
+      while (RQ.length < 47) {
+        var t = rnd(6), u;
+        if (t === 0) { u = pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)) + pick(L, 1 + rnd(3)); }
+        else if (t === 1) { u = pick(L, 4 + rnd(4)) + '_' + pick(D, 2 + rnd(3)); }
+        else if (t === 2) { u = '_' + pick(L, 3 + rnd(3)) + pick(D, 1 + rnd(3)); }
+        else if (t === 3) { u = pick(L, 2 + rnd(2)) + '.' + pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)); }
+        else if (t === 4) { u = pick(L, 5 + rnd(4)); }
+        else { u = pick(D, 1) + pick(L, 3 + rnd(3)) + pick(D, 2 + rnd(3)); }
+        if (!seen[u]) { seen[u] = 1; RQ.push(u); }
+      }
+    }
+    function pd(d) { var a = String(d).split('-'); return new Date(parseInt(a[0], 10), parseInt(a[1], 10) - 1, parseInt(a[2], 10)); }
+    function md(d) { var x = pd(d); return (x.getMonth() + 1) + '월 ' + x.getDate() + '일'; }
+    function ymd(d) { var x = pd(d); return x.getFullYear() + '년 ' + (x.getMonth() + 1) + '월 ' + x.getDate() + '일'; }
+    function agoTxt(d) {
+      var n = Math.round((TODAY - pd(d)) / 86400000);
+      if (n < 7) { return n + '일 전'; }
+      if (n < 30) { return Math.floor(n / 7) + '주 전'; }
+      if (n < 365) { return Math.floor(n / 30) + '개월 전'; }
+      return Math.floor(n / 365) + '년 전';
+    }
+    function ktime(t) {
+      var a = String(t).split(':'), h = parseInt(a[0], 10);
+      return (h < 12 ? '오전 ' : '오후 ') + (h % 12 === 0 ? 12 : h % 12) + ':' + a[1];
+    }
+    var ic = {
+      home: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><path d="M3.500 10.500L12 3l8.500 7.500V21h-6v-6.500h-5V21h-6z"/></svg>',
+      homeOn: '<svg width="26" height="26" viewBox="0 0 24 24" fill="#111" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><path d="M3.500 10.500L12 3l8.500 7.500V21h-6v-6.500h-5V21h-6z"/></svg>',
+      reels: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.500"/><path d="M3 8.500h18M8.500 3l3 5.500M14 3l3 5.500"/><path d="M10 12.500v5l4.500-2.500z" fill="#111"/></svg>',
+      send: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M21.500 3L10 14M21.500 3l-6.500 18-3.500-8-8-3.500z"/></svg>',
+      search: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round"><circle cx="10.500" cy="10.500" r="7"/><path d="M16 16l5 5"/></svg>',
+      heart: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20.500S3 15 3 8.800C3 6 5 4 7.500 4c1.800 0 3.600 1 4.500 2.600C12.900 5 14.700 4 16.500 4 19 4 21 6 21 8.800 21 15 12 20.500 12 20.500z"/></svg>',
+      cmt: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><path d="M20.500 11.500c0 4.500-3.800 8-8.500 8-1.100 0-2.100-.2-3-.5L4 20.500l1.300-4C4.200 15.200 3.500 13.500 3.500 11.500c0-4.400 3.800-8 8.500-8s8.500 3.600 8.500 8z"/></svg>',
+      mark: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linejoin="round"><path d="M5.500 3.500h13v17L12 15.500l-6.500 5z"/></svg>',
+      menu: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><path d="M4 6.500h16M4 12h16M4 17.500h16"/></svg>',
+      plusSq: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round"><rect x="3.500" y="3.500" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>',
+      grid: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.900"><rect x="3.500" y="3.500" width="7" height="7"/><rect x="13.500" y="3.500" width="7" height="7"/><rect x="3.500" y="13.500" width="7" height="7"/><rect x="13.500" y="13.500" width="7" height="7"/></svg>',
+      tag: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="1.8" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M12 3.500c-3 0-4.500 2-4.500 4.500 0 2.200 1.200 4 3 5l-5 1.500c-.8.300-1 1-1 1.800V20h15v-3.700c0-.8-.2-1.500-1-1.800l-5-1.500c1.800-1 3-2.800 3-5C16.500 5.500 15 3.500 12 3.500z"/></svg>',
+      reelsG: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8e8e8e" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.500"/><path d="M3 8.500h18M8.500 3l3 5.500M14 3l3 5.500"/><path d="M10 12.500v5l4.500-2.500z" fill="#8e8e8e"/></svg>',
+      lockI: '<svg width="14" height="16" viewBox="0 0 14 16" fill="none" stroke="#111" stroke-width="1.8"><rect x="1.500" y="7" width="11" height="7.500" rx="2" fill="#111"/><path d="M4 7V4.800C4 3.200 5.300 2 7 2s3 1.200 3 2.800V7"/></svg>',
+      chevD: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>',
+      dots: '<svg width="20" height="20" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.800"/><circle cx="12" cy="12" r="1.800"/><circle cx="19" cy="12" r="1.800"/></svg>',
+      x: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.200" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>',
+      back: '<svg width="14" height="22" viewBox="0 0 12 20" fill="none" stroke="#111" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>'
+    };
+    function avatar(size, ring) {
+      var s = size || 32;
+      return '<div class="ig-av' + (ring ? ' ring' : '') + '" style="width:' + s + 'px;height:' + s + 'px">' + I.person.replace('<svg ', '<svg width="' + Math.round(s * 0.62) + '" height="' + Math.round(s * 0.62) + '" ') + '</div>';
+    }
+    function imBox(src, cls) {
+      return '<div class="ig-im ' + (cls || '') + '"><i class="ig-ph">' + I.photo + '</i>' + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="" draggable="false">' : '') + '</div>';
+    }
+    G.posts.concat([]).forEach(function (p) { if (p.img) { resolve(p.img, function () {}); } });
+    (G.stories || []).forEach(function (s) { if (s.img) { resolve(s.img, function () {}); } });
+
+    layer.innerHTML = '<div class="ig" style="position:absolute;inset:0;background:#fff"><div id="igMain"></div></div>';
+    var main = qs(layer, '#igMain');
+
+    function barHtml() {
+      function b(id, icon, on) { return '<button type="button" class="' + (on ? 'on' : '') + '" data-t="' + id + '">' + icon + '</button>'; }
+      var prof = '<div class="ig-pb' + (tab === 'profile' ? ' on' : '') + '">' + avatar(26) + '</div>';
+      return '<div class="ig-bar">' + b('home', tab === 'home' ? ic.homeOn : ic.home, tab === 'home') + '<span class="inert">' + ic.reels + '</span><span class="inert">' + ic.send + '</span><span class="inert">' + ic.search + '</span>' +
+        '<button type="button" data-t="profile">' + prof + '</button></div>';
+    }
+    function bindBar() {
+      qsa(main, '.ig-bar button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var t = b.getAttribute('data-t');
+          if (t !== tab) { tab = t; render(); }
+        });
+      });
+    }
+    function postHtml(p, i, detail) {
+      var cm = p.comments || [];
+      var cmLine = !detail && cm.length ? '<div class="ig-more" data-i="' + i + '">댓글 ' + cm.length + '개 모두 보기</div>' : '';
+      return '<article class="ig-post"><div class="ig-ph-top">' + avatar(32) + '<b>' + esc(ME) + '</b><span class="sp"></span>' + ic.dots + '</div>' +
+        imBox(p.img, 'sq') +
+        '<div class="ig-acts">' + ic.heart + '<span class="cm" data-i="' + i + '">' + ic.cmt + '</span>' + ic.send + '<span class="sp"></span>' + ic.mark + '</div>' +
+        '<div class="ig-likes">좋아요 ' + (p.likes || 0) + '개</div>' +
+        '<div class="ig-cap"><b>' + esc(ME) + '</b> ' + esc(p.caption || '') + '</div>' + cmLine +
+        '<div class="ig-date">' + esc(md(p.date)) + '</div></article>';
+    }
+    function renderHome() {
+      var feed = G.posts.map(function (p, i) { return postHtml(p, i, false); }).join('');
+      main.innerHTML = sbHtml('dark') +
+        '<div class="ig-top"><span class="logo">Instagram</span><span class="sp"></span><button type="button" id="igAct" aria-label="활동" class="ig-hb">' + ic.heart + '<i class="dot"></i></button><button type="button" id="igDm" aria-label="쪽지">' + ic.send + '</button></div>' +
+        '<div class="ig-scroll"><div class="ig-stories"><div class="st"><div class="ig-me">' + avatar(66) + '<i class="plus"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 1.500v9M1.500 6h9"/></svg></i></div><span>내 스토리</span></div></div>' +
+        feed + '<div style="height:90px"></div></div>' + barHtml();
+      bindBar();
+      qs(main, '#igDm').addEventListener('click', openDmList);
+      qs(main, '#igAct').addEventListener('click', openReq);
+      qsa(main, '.ig-more,.ig-acts .cm').forEach(function (n) {
+        n.addEventListener('click', function () { openPost(parseInt(n.getAttribute('data-i'), 10)); });
+      });
+    }
+    function renderProfile() {
+      var cells = G.posts.map(function (p, i) { return '<div class="c" data-i="' + i + '">' + imBox(p.img, 'fill') + '</div>'; }).join('');
+      main.innerHTML = sbHtml('dark') +
+        '<div class="ig-top"><span class="un">' + ic.lockI + '<b>' + esc(ME) + '</b>' + ic.chevD + '</span><span class="sp"></span><span class="inert">' + ic.plusSq + '</span><button type="button" id="igMenu" aria-label="메뉴">' + ic.menu + '</button></div>' +
+        '<div class="ig-scroll"><div class="ig-prof"><div class="row">' + avatar(86) +
+        '<div class="stats"><div><b>' + G.posts.length + '</b><span>게시물</span></div><div><b>0</b><span>팔로워</span></div><div><b>0</b><span>팔로잉</span></div></div></div>' +
+        '<div class="nm">' + esc(USER.name || '') + '</div>' + (G.bio ? '<div class="bio">' + esc(G.bio).replace(/\n/g, '<br>') + '</div>' : '') +
+        '<div class="btns"><span class="inert">프로필 편집</span><span class="inert">프로필 공유</span></div></div>' +
+        '<div class="ig-tabs"><span class="on">' + ic.grid + '</span><span>' + ic.reelsG + '</span><span>' + ic.tag + '</span></div>' +
+        '<div class="ig-grid">' + cells + '</div><div style="height:90px"></div></div>' + barHtml();
+      bindBar();
+      qs(main, '#igMenu').addEventListener('click', openMenu);
+      qsa(main, '.ig-grid .c').forEach(function (c) {
+        c.addEventListener('click', function () { openPost(parseInt(c.getAttribute('data-i'), 10)); });
+      });
+    }
+    function render() { if (tab === 'home') { renderHome(); } else { renderProfile(); } }
+
+    function openPost(i) {
+      var p = G.posts[i];
+      var cm = (p.comments || []).map(function (c) {
+        return '<div class="ig-cm">' + avatar(34) + '<div class="tx"><div><b>' + esc(c.user) + '</b> ' + esc(c.text) + '</div><div class="sub">' + esc(c.time || '') + '&nbsp;&nbsp;답글 달기</div></div><span class="hr">' + ic.heart.replace(/width="25" height="25"/, 'width="14" height="14"') + '</span></div>';
+      }).join('');
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">게시물</b><span class="sp"></span></div>' +
+        '<div class="ig-scroll">' + postHtml(p, i, true) + '<div class="ig-cms">' + cm + '</div><div style="height:90px"></div></div>' +
+        '<div class="ig-cin">' + avatar(30) + '<span>댓글 달기...</span></div>', 'igv');
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+    }
+    function openMenu() {
+      var items = ['설정 및 활동', '보관', '내 활동', 'QR 코드', '저장됨', '친한 친구', '즐겨찾기'];
+      var sh = el('<div class="ig-sheetbg"><div class="ig-sheet"><i class="grab"></i><div class="ttl">' + esc(ME) + '</div>' +
+        items.map(function (t) { return '<div class="it' + (t === '보관' ? ' act' : '') + '" data-k="' + esc(t) + '">' + esc(t) + '</div>'; }).join('') + '</div></div>');
+      layer.appendChild(sh);
+      requestAnimationFrame(function () { sh.classList.add('on'); });
+      function close(cb) { sh.classList.remove('on'); setTimeout(function () { sh.remove(); if (cb) { cb(); } }, 220); }
+      sh.addEventListener('click', function (e) {
+        if (e.target === sh) { close(); return; }
+        var it = e.target.closest ? e.target.closest('.it.act') : null;
+        if (it) { close(openArchive); }
+      });
+    }
+    function openArchive() {
+      var cells = (G.stories || []).map(function (s, i) {
+        var d = pd(s.date);
+        return '<div class="c" data-i="' + i + '">' + imBox(s.img, 'fill') + '<span class="bd"><b>' + d.getDate() + '</b>' + (d.getMonth() + 1) + '월</span></div>';
+      }).join('');
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">보관</b><span class="sp"></span></div>' +
+        '<div class="ig-scroll"><div class="ig-arc-h">스토리 보관함 ' + ic.chevD + '</div><div class="ig-arc">' + cells + '</div><div style="height:60px"></div></div>', 'igv');
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+      qsa(v, '.ig-arc .c').forEach(function (c) {
+        c.addEventListener('click', function () { openStory(parseInt(c.getAttribute('data-i'), 10)); });
+      });
+    }
+    function openStory(i0) {
+      var list = G.stories || [], i = i0;
+      var o = el('<div class="ig-story"></div>');
+      layer.appendChild(o);
+      setHB('light');
+      function draw() {
+        var s = list[i];
+        var bars = list.map(function (x, k) { return '<i class="' + (k < i ? 'done' : (k === i ? 'cur' : '')) + '"></i>'; }).join('');
+        o.innerHTML = '<div class="bg">' + imBox(s.img, 'full') + '</div><div class="bars">' + bars + '</div>' +
+          '<div class="hd">' + avatar(34) + '<b>' + esc(ME) + '</b><span>' + esc(agoTxt(s.date)) + '</span><span class="sp"></span><button type="button" class="cl" aria-label="닫기">' + ic.x + '</button></div>' +
+          '<div class="dt">' + esc(ymd(s.date)) + '</div><div class="l"></div><div class="r"></div>';
+        qs(o, '.cl').addEventListener('click', function () { o.remove(); setHB('dark'); });
+        qs(o, '.l').addEventListener('click', function () { if (i > 0) { i--; draw(); } });
+        qs(o, '.r').addEventListener('click', function () { if (i < list.length - 1) { i++; draw(); } else { o.remove(); setHB('dark'); } });
+      }
+      draw();
+    }
+    function openReq() {
+      var rows = RQ.map(function (u) {
+        return '<div class="ig-rq">' + avatar(44) + '<div class="mid"><b>' + esc(u) + '</b><span>팔로우 요청</span></div><span class="ok inert">확인</span><span class="no inert">삭제</span></div>';
+      }).join('');
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">팔로우 요청</b><span class="sp"></span></div>' +
+        '<div class="ig-scroll"><div class="ig-rqh">요청 ' + RQ.length + '개</div>' + rows + '<div style="height:60px"></div></div>', 'igv');
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+    }
+    function openDmList() {
+      var dm = G.dm || { user: 'jh_1107', msgs: [] };
+      var last = dm.msgs[dm.msgs.length - 1] || {};
+      var pv = last.kind === 'mention' ? '스토리에서 회원님을 언급했어요' : (last.kind === 'share' ? '스토리를 공유했어요' : (last.kind === 'story' ? '스토리에 답장함' : (last.text || '')));
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">' + esc(ME) + '</b><span class="sp"></span></div>' +
+        '<div class="ig-scroll"><div class="ig-dmh">메시지</div><div class="ig-dmrow" id="igRow">' + avatar(54) + '<div class="mid"><b>' + esc(dm.user) + '</b><span>' + esc(pv) + (last.d ? ' · ' + esc(agoTxt(last.d)) : '') + '</span></div></div></div>', 'igv');
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+      qs(v, '#igRow').addEventListener('click', function () { openThread(dm); });
+    }
+    function openThread(dm) {
+      var html = '', prevD = '';
+      dm.msgs.forEach(function (m) {
+        if (m.d !== prevD) { html += '<div class="ig-dd">' + esc(ymd(m.d)) + ' ' + esc(ktime(m.t)) + '</div>'; prevD = m.d; }
+        var mine = m.from === 'me';
+        if (m.kind) {
+          var lab = m.kind === 'mention' ? (mine ? '회원님이 ' + esc(dm.user) + '님을 스토리에서 언급함' : esc(dm.user) + '님이 스토리에서 회원님을 언급함')
+            : (m.kind === 'share' ? (mine ? '회원님이 스토리를 공유함' : esc(dm.user) + '님이 스토리를 공유함')
+            : (mine ? esc(dm.user) + '님의 스토리에 답장함' : esc(dm.user) + '님이 내 스토리에 답장함'));
+          html += '<div class="ig-sr ' + (mine ? 'me' : 'th') + '"><div class="lb">' + lab + '</div>' +
+            '<div class="ex">스토리를 더 이상<br>이용할 수 없습니다</div>' + (m.text ? '<div class="bb">' + esc(m.text) + '</div>' : '') + '</div>';
+        } else {
+          html += '<div class="ig-mm ' + (mine ? 'me' : 'th') + '">' + (mine ? '' : avatar(26)) + '<div class="bb">' + esc(m.text) + '</div></div>';
+        }
+      });
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="ig-top ig-th"><button type="button" class="back">' + ic.back + '</button>' + avatar(34) + '<div class="who"><b>' + esc(dm.user) + '</b><span>' + esc(dm.user) + '</span></div><span class="sp"></span></div>' +
+        '<div class="ig-tb" id="igTb">' + html + '<div style="height:20px"></div></div>' +
+        '<div class="ig-min"><span>메시지 보내기...</span></div>', 'igv');
+      qs(v, '.back').addEventListener('click', function () { popView(v); });
+      var tb = qs(v, '#igTb');
+      requestAnimationFrame(function () { tb.scrollTop = tb.scrollHeight; });
+      setTimeout(function () { tb.scrollTop = tb.scrollHeight; }, 320);
+    }
+    render();
+  };
+
+  /* =========================================================
      사진 앱
      ========================================================= */
   IMPL.photos = function (layer) {
@@ -1072,7 +1352,8 @@
     b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
     b.addEventListener('click', function () { if (b.__moved) { return; } b.remove(); goDm(bdm.id); });
     swipeAway(b);
-    setTimeout(function () { b.classList.add('on'); }, 30);
+    void b.offsetWidth;
+    requestAnimationFrame(function () { b.classList.add('on'); });
     setTimeout(function () { b.classList.remove('on'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
@@ -1204,8 +1485,11 @@
       if (String(d.time) >= '08:00') { d.time = clockHHMM(); }
       if (current === 'lock') { addLockNotif(d); }
       else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
-      updateBadge();
-      if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }
+      /* 배너가 올라오는 동안에는 무거운 갱신을 미루어 끊기지 않게 해요 */
+      setTimeout(function () {
+        updateBadge();
+        if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }
+      }, 700);
       if (dmArrived < C.DMS.length) { setTimeout(step, gap()); }
     }
     setTimeout(step, C.DM_FIRST_DELAY);
