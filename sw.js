@@ -1,5 +1,5 @@
 /* 우리의 하루 - 서비스 워커 (상대경로 기준, 오프라인에서도 열리게) */
-var CACHE = 'ourday-v2';
+var CACHE = 'ourday-v3';
 var CORE = ['./', './index.html', './style.css', './app.js', './config.js', './manifest.webmanifest'];
 
 self.addEventListener('install', function (e) {
@@ -25,7 +25,7 @@ self.addEventListener('fetch', function (e) {
     return;
   }
   e.respondWith(
-    fetch(req).then(function (res) {
+    fetch(req, { cache: 'no-cache' }).then(function (res) {
       var copy = res.clone();
       caches.open(CACHE).then(function (c) { c.put(req, copy); });
       return res;
