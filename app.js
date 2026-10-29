@@ -138,7 +138,16 @@
   I.handset = '<svg viewBox="0 0 24 24" fill="#fff"><path d="M20.010 15.380c-1.230 0-2.420-.2-3.530-.56a.977.977 0 00-1.010.24l-1.570 1.970c-2.830-1.350-5.480-3.900-6.890-6.830l1.950-1.660c.27-.28.35-.67.24-1.020-.37-1.110-.56-2.300-.56-3.530 0-.54-.45-.99-.99-.99H4.190C3.650 3 3 3.240 3 3.990 3 13.280 10.730 21 20.010 21c.71 0 .99-.63.99-1.180v-3.450c0-.54-.45-.99-.99-.99z"/></svg>';
 
   /* ---------- 앱 아이콘 (직접 그린 단순한 아이콘) ---------- */
+  function fillName(x) {
+    x = String(x);
+    return x.replace(/\{NAME\}아/g, function () {
+      var c = String(USER.name || '').charCodeAt(String(USER.name || '').length - 1);
+      var jong = c >= 0xAC00 && c <= 0xD7A3 && ((c - 0xAC00) % 28) !== 0;
+      return USER.name + (jong ? '아' : '야');
+    }).replace(/\{NAME\}/g, USER.name);
+  }
   var ICO = {};
+  ICO.kakao = '<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#FEE500"/><path d="M30 14C20.600 14 13 20 13 27.400c0 4.700 3.100 8.800 7.800 11.200l-1.800 6.600c-.1.500.4.800.8.500l7.800-5.100c.8.100 1.600.1 2.400.1 9.400 0 17-6 17-13.300S39.400 14 30 14z" fill="#3a1d1d"/></svg>';
   ICO.x = '<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#000"/><path d="M17 16l26 28" stroke="#fff" stroke-width="5.500"/><path d="M43 16L17 44" stroke="#fff" stroke-width="2.200"/></svg>';
   ICO.instagram = '<svg viewBox="0 0 60 60"><defs><radialGradient id="igG" cx=".3" cy="1.05" r="1.15"><stop offset="0" stop-color="#fdf497"/><stop offset=".1" stop-color="#fdf497"/><stop offset=".45" stop-color="#fd5949"/><stop offset=".6" stop-color="#d6249f"/><stop offset="1" stop-color="#285aeb"/></radialGradient></defs><rect width="60" height="60" fill="url(#igG)"/><rect x="15" y="15" width="30" height="30" rx="9" fill="none" stroke="#fff" stroke-width="3"/><circle cx="30" cy="30" r="7" fill="none" stroke="#fff" stroke-width="3"/><circle cx="38.500" cy="21.500" r="2" fill="#fff"/></svg>';
   ICO.youtube = '<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#fff"/><rect x="9" y="16.500" width="42" height="27" rx="8" fill="#ee2e3d"/><path d="M25.500 23v14l12-7z" fill="#fff"/></svg>';
@@ -329,7 +338,7 @@
     clearLayers();
     passBuf = ''; passOn = false;
     setHB('light');
-    var notifs = preGroupHtml() + xFollowHtml() + C.NOTIFS.map(function (n) {
+    var notifs = preGroupHtml() + kakaoLockHtml() + xFollowHtml() + C.NOTIFS.map(function (n) {
       var mm = String(n.time).match(/(\d+)\s*분/), off = n.time === '방금' ? 0 : (mm ? parseInt(mm[1], 10) : -1);
       return '<div class="notif"><div class="ic">' + ICO.phone + '</div><div class="tx"><b>' + esc(n.name) + '</b><span>' + esc(n.text) + '</span></div><div class="tm"' + (off >= 0 ? ' data-at="' + (clockMin() - off) + '"' : '') + '>' + esc(n.time) + '</div></div>';
     }).join('');
@@ -398,6 +407,7 @@
     current = 'home';
     setTimeout(function () { lock.remove(); L.lock = null; }, 360);
     if (pendingDm) { var pid = pendingDm; pendingDm = null; goDm(pid); }
+    else if (pendingKk) { kkGoto = pendingKk; pendingKk = null; openApp('kakao', null, { instant: true }); }
   }
   document.addEventListener('keydown', function (e) {
     if (current === 'lock' && passOn && /^[0-9]$/.test(e.key)) { pressKey(e.key); }
@@ -706,6 +716,8 @@
      카카오톡 앱
      ========================================================= */
   var kkUnread = null;
+  var kkGoto = null;
+  var pendingKk = null;
   IMPL.kakao = function (layer) {
     setHB('dark');
     var K = C.KAKAO || { FRIENDS: [], ROOMS: {} };
@@ -728,11 +740,22 @@
       hash: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><path d="M9 4L7 20M17 4l-2 20M4 9h17M3 15h17"/></svg>',
       menu: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
     };
+    /* 깃허브에 올린 사진 파일: kk-me(나), kk-jeonghwan … 이름으로 올리면 자동으로 보여요. config의 KAKAO.PHOTOS로 바꿀 수도 있어요 */
+    var KKFILE = {
+      '__me': 'kk-me.jpg', '신정환': 'kk-jeonghwan.jpg', '최영재': 'kk-yeongjae.jpg', '이경민': 'kk-gyeongmin.jpg',
+      '한지훈': 'kk-jihun.jpg', '김도훈': 'kk-dohun.jpg', '한진': 'kk-hanjin.jpg', '류인아': 'kk-ina.jpg', '엄마': 'kk-mom.jpg', '아빠': 'kk-dad.jpg'
+    };
+    if (K.PHOTOS) { Object.keys(K.PHOTOS).forEach(function (k) { KKFILE[k] = K.PHOTOS[k]; }); }
+    Object.keys(KKFILE).forEach(function (k) { resolve(KKFILE[k], function () {}); });
     var AVP = {};
     try { AVP = JSON.parse(store.get('ourday.kkav') || '{}') || {}; } catch (e) { AVP = {}; }
     function avK(size, key) {
       var ph = key && AVP[key];
       var st = size ? ' style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.37) + 'px"' : '';
+      if (!ph && key) {
+        var fp = KKFILE[key];
+        if (fp) { return '<div class="kk-av"' + st + '>' + I.person.replace('<svg ', '<svg width="' + Math.round((size || 48) * 0.62) + '" height="' + Math.round((size || 48) * 0.62) + '" ') + '<img data-rm="1" src="' + esc(rs(fp)) + '" data-orig="' + esc(fp) + '" alt=""></div>'; }
+      }
       if (ph) { return '<div class="kk-av"' + st + '><img src="' + ph + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>'; }
       return '<div class="kk-av"' + st + '>' + I.person.replace('<svg ', '<svg width="' + Math.round((size || 48) * 0.62) + '" height="' + Math.round((size || 48) * 0.62) + '" ') + '</div>';
     }
@@ -757,6 +780,7 @@
       document.body.appendChild(inp); inp.click();
       setTimeout(function () { inp.remove(); }, 60000);
     }
+    function kt(x) { return esc(fillName(x)); }
     function pd(d) { var a = d.split('-'); return [parseInt(a[0], 10), parseInt(a[1], 10), parseInt(a[2], 10)]; }
     function ktime(t) {
       var a = t.split(':'), h = parseInt(a[0], 10), m = a[1];
@@ -823,7 +847,7 @@
     function renderChats() {
       var rows = chatRooms().map(function (r) {
         var u = kkUnread[r.name] || 0;
-        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52, r.name) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + esc(r.last.text) + '</div></div>' +
+        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52, r.name) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + kt(r.last.text) + '</div></div>' +
           '<div class="rt"><span class="tm">' + esc(listTime(r.last)) + '</span>' + (u > 0 ? '<i class="bd">' + u + '</i>' : '') + '</div></div>';
       }).join('');
       main.innerHTML = sbHtml('dark') +
@@ -858,10 +882,10 @@
         var showTime = !nx || nx.from !== g.from || nx.t !== g.t || nx.d !== g.d;
         var tm = showTime ? '<span class="ktm">' + ktime(g.t) + '</span>' : '';
         if (g.from === 'me') {
-          html += '<div class="kr-msg me' + (first ? ' first' : '') + '">' + tm + '<div class="kb">' + esc(g.text) + '</div></div>';
+          html += '<div class="kr-msg me' + (first ? ' first' : '') + '">' + tm + '<div class="kb">' + kt(g.text) + '</div></div>';
         } else {
           html += '<div class="kr-msg them' + (first ? ' first' : '') + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
-            '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + esc(g.text) + '</div>' + tm + '</div></div></div>';
+            '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + kt(g.text) + '</div>' + tm + '</div></div></div>';
         }
         prevD = g.d; prevFrom = g.from;
       });
@@ -876,6 +900,7 @@
       qs(v, '.back').addEventListener('click', function () { popView(v, function () { render(); }); });
     }
     render();
+    if (kkGoto) { var g0 = kkGoto; kkGoto = null; tab = 'chats'; render(); openRoom(g0); }
   };
 
   /* =========================================================
@@ -1033,6 +1058,20 @@
     if (!n) { return ''; }
     return '<div class="notif dmn grp" data-id="' + last.id + '"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지 ' + n + '개</b><span>' + esc(last.name) + ': ' + rich(last.msgs[0]) + '</span></div><div class="tm">' + esc(last.time) + '</div></div>';
   }
+  function kakaoLockHtml() {
+    var K = C.KAKAO; if (!K || !K.ROOMS) { return ''; }
+    var out = [];
+    ['신정환', '최영재'].forEach(function (n) {
+      var r = K.ROOMS[n]; if (!r || !r.unread || !r.msgs || !r.msgs.length) { return; }
+      var l = r.msgs[r.msgs.length - 1];
+      if (l.from !== 'them') { return; }
+      out.push({ n: n, l: l });
+    });
+    out.sort(function (a, b) { return (b.l.d + b.l.t).localeCompare(a.l.d + a.l.t); });
+    return out.map(function (o) {
+      return '<div class="notif" data-kk="' + esc(o.n) + '"><div class="ic">' + ICO.kakao + '</div><div class="tx"><b>' + esc(o.n) + '</b><span>' + esc(fillName(o.l.text)) + '</span></div><div class="tm">' + esc(o.l.t) + '</div></div>';
+    }).join('');
+  }
   function xFollowHtml() {
     var n = (C.NOTIS || [])[0];
     if (!n) { return ''; }
@@ -1093,7 +1132,7 @@
       if (n.__b) { return; }
       n.__b = true;
       n.style.cursor = 'pointer';
-      n.addEventListener('click', function () { if (n.__moved) { return; } pendingDm = n.getAttribute('data-id') || null; showPass(); });
+      n.addEventListener('click', function () { if (n.__moved) { return; } pendingDm = n.getAttribute('data-id') || null; pendingKk = n.getAttribute('data-kk') || null; showPass(); });
       swipeAway(n, lockDense);
     });
   }
