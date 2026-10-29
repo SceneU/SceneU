@@ -11,10 +11,10 @@
   var LIVE_DMS = [
     { id: "d11", name: "user_2048173", handle: "user_2048173", time: "08:00", followers: 0, following: 1, posts: 0, msgs: ["방금 또 올라왔어요 보셨어요?"] },
     { id: "d12", name: "p5517302",     handle: "p5517302",     time: "08:00", followers: 1, following: 2, posts: 0, msgs: ["입장 안 내시나요?"] },
-    { id: "d13", name: "user_8830416", handle: "user_8830416", time: "08:00", followers: 0, following: 3, posts: 0, msgs: ["팬들 다 기다리는데 말 한마디는 해야죠"] },
-    { id: "d14", name: "r_2290745",    handle: "r_2290745",    time: "08:00", followers: 2, following: 4, posts: 0, msgs: ["{NAME}님 계정 지우면 더 이상해 보여요"] },
-    { id: "d15", name: "user61930274", handle: "user61930274", time: "08:00", followers: 0, following: 2, posts: 0, msgs: ["스크린샷 이미 다 저장돼 있어요 ㅋㅋ"] },
-    { id: "d16", name: "t_7041829",    handle: "t_7041829",    time: "08:00", followers: 1, following: 1, posts: 0, msgs: ["읽씹이네 ㅋㅋ"] }
+    { id: "d13", name: "user_8830416", handle: "user_8830416", time: "08:01", followers: 0, following: 3, posts: 0, msgs: ["팬들 다 기다리는데 말 한마디는 해야죠"] },
+    { id: "d14", name: "r_2290745",    handle: "r_2290745",    time: "08:01", followers: 2, following: 4, posts: 0, msgs: ["{NAME}님 계정 지우면 더 이상해 보여요"] },
+    { id: "d15", name: "user61930274", handle: "user61930274", time: "08:02", followers: 0, following: 2, posts: 0, msgs: ["스크린샷 이미 다 저장돼 있어요 ㅋㅋ"] },
+    { id: "d16", name: "t_7041829",    handle: "t_7041829",    time: "08:02", followers: 1, following: 1, posts: 0, msgs: ["병신"] }
   ];
   if (!C.DMS.some(function (d) { return String(d.time) >= '08:00'; })) { C.DMS = C.DMS.concat(LIVE_DMS); }
   var DM_PRE = 0;
