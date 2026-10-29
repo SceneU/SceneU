@@ -492,3 +492,7 @@ svg{display:block}
 .nrow .nt b{font-weight:800}
 .nrow .nt span{color:#536471}
 .nrow .nt span{white-space:nowrap}
+
+.ex-top .sbx input{flex:1;min-width:0;border:0;background:transparent;outline:0;font:inherit;font-size:17px;color:#0f1419;-webkit-appearance:none;appearance:none}
+.ex-top .sbx input::placeholder{color:#8b8b8b}
+.ex-top .sbx input::-webkit-search-cancel-button{display:none}

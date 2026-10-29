@@ -830,16 +830,24 @@
       }).join('');
       base.innerHTML = sbHtml('dark') +
         '<div class="ex-top"><div class="r1"><span class="me2">' + I.person.replace('<svg ', '<svg width="22" height="22" ').replace('fill="currentColor"', 'fill="#fff"') + '</span>' +
-        '<div class="sbx">' + I.search + '<span>검색</span></div><span class="gr2">' + gear + '</span></div><div class="tabs">' + tabs + '</div></div>' +
+        '<form class="sbx" id="exForm" action="#">' + I.search + '<input id="exQ" type="search" enterkeyhint="search" placeholder="검색" autocomplete="off" autocapitalize="off" spellcheck="false"></form><span class="gr2">' + gear + '</span></div><div class="tabs">' + tabs + '</div></div>' +
         '<div class="ex-list">' + rows + '</div>' + barHtml();
       bindBar();
       qsa(base, '.trd').forEach(function (r) {
-        r.addEventListener('click', function () { openResults(r.getAttribute('data-q')); });
+        r.addEventListener('click', function () { openResults(r.getAttribute('data-q'), true); });
+      });
+      var f = qs(base, '#exForm'), q = qs(base, '#exQ');
+      f.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var term = String(q.value || '').replace(/^\s+|\s+$/g, '');
+        if (!term) { return; }
+        q.blur();
+        openResults(term, term.indexOf(C.SEARCH_KEYWORD || 'ㅇㅇ') !== -1);
       });
     }
 
     /* 검색 결과: 가상 기사 링크가 걸린 게시물 목록. 카드를 누르면 사파리에 넣어둔 가상 기사가 열려요 */
-    function openResults(term) {
+    function openResults(term, hit) {
       var handles = ['dailystar_news', 'yeonyetalk_kr', 'newswave_live', 'dailystar_news', 'yeonyetalk_kr'];
       var colors = ['#1d3557', '#8d5a97', '#2a7f62', '#b5483a', '#5a6b7b'];
       var posts = C.NEWS.map(function (n, i) {
@@ -857,7 +865,7 @@
       var v = pushView(root, sbHtml('dark') +
         '<div class="sr-top"><div class="r1"><button type="button" class="back" style="color:#0f1419">' + I.back + '</button><div class="sbx">' + I.search + '<span class="q">' + esc(term) + '</span></div><span class="mo">···</span></div>' +
         '<div class="tabs"><span class="on"><em>인기</em></span><span><em>최신</em></span><span><em>사용자</em></span><span><em>미디어</em></span><span><em>리스트</em></span></div></div>' +
-        '<div class="sr-list">' + posts + '</div>', 'xa');
+        '<div class="sr-list">' + (hit ? posts : '<div class="act-empty"><h2>"' + esc(term) + '"에 대한 결과 없음</h2><p>철자를 확인하거나 다른 검색어를 입력해 보세요.</p></div>') + '</div>', 'xa');
       v.style.background = '#fff';
       qs(v, '.back').addEventListener('click', function () { popView(v); });
       qsa(v, '.lc').forEach(function (c) {
