@@ -176,8 +176,13 @@
     EXT2.forEach(function (e) { add(m[1] + m[2] + e); });
     return out;
   }
-  /* 가능한 이름을 한꺼번에(동시에) 시도해서 제일 먼저 맞는 걸 쓰고, 찾은 이름은 기억해요 */
+  /* 이름 후보: 먼저 적힌 이름 하나만 빠르게 시도하고, 없을 때만 다른 확장자를 한꺼번에 시도해요. 찾은 이름은 기기에 기억해요 */
   var RES = {}, RESW = {};
+  try {
+    var savedRes = JSON.parse(localStorage.getItem('ourday.res') || '{}');
+    Object.keys(savedRes).forEach(function (k) { if (savedRes[k]) { RES[k] = savedRes[k]; } });
+  } catch (e) {}
+  function saveRes() { try { localStorage.setItem('ourday.res', JSON.stringify(RES)); } catch (e) {} }
   function resolve(src, cb) {
     if (!src) { cb(null); return; }
     if (RES[src] !== undefined) { cb(RES[src] || null); return; }
@@ -185,41 +190,70 @@
     w.push(cb);
     if (w.length > 1) { return; }
     var vs = variants(src), n = vs.length, ok = [];
+    function done(v) {
+      RES[src] = v;
+      if (v) { saveRes(); }
+      var list = RESW[src] || [];
+      RESW[src] = [];
+      list.forEach(function (f) { f(v || null); });
+    }
     function fin() {
       if (RES[src] !== undefined) { return; }
-      for (var j = 0; j < n; j++) {
+      for (var j = 1; j < n; j++) {
         if (ok[j] === undefined) { return; }
         if (ok[j]) { done(vs[j]); return; }
       }
       done('');
     }
-    function done(v) {
-      RES[src] = v;
-      var list = RESW[src] || [];
-      RESW[src] = [];
-      list.forEach(function (f) { f(v || null); });
-    }
-    vs.forEach(function (v, i) {
-      var im = new Image();
-      im.onload = function () { ok[i] = true; fin(); };
-      im.onerror = function () { ok[i] = false; fin(); };
-      im.src = v;
-    });
-  }
-  function rs(src) { return (src && RES[src]) ? RES[src] : src; }
-  function setBg(div, srcs) {
-    (function next(i) {
-      if (i >= srcs.length) { return; }
-      resolve(srcs[i], function (v) {
-        if (v) { div.style.backgroundImage = 'url("' + v + '")'; } else { next(i + 1); }
+    var first = new Image();
+    first.onload = function () { done(vs[0]); };
+    first.onerror = function () {
+      if (n < 2) { done(''); return; }
+      vs.forEach(function (v, i) {
+        if (i === 0) { return; }
+        var im = new Image();
+        im.onload = function () { ok[i] = true; fin(); };
+        im.onerror = function () { ok[i] = false; fin(); };
+        im.src = v;
       });
+    };
+    first.src = vs[0];
+  }
+  var DECODED = {};
+  function rs(src) { return (src && RES[src]) ? RES[src] : src; }
+  /* 배경 사진: 다 받아서 디코딩이 끝난 뒤 부드럽게 나타나요(기본 그라데이션이 먼저 비치지 않아요) */
+  function setBg(div, srcs) {
+    function show(v) {
+      var im = new Image();
+      function put() {
+        var p = document.createElement('div');
+        p.className = 'bgph';
+        p.style.backgroundImage = 'url("' + v + '")';
+        if (DECODED[v]) { p.style.transition = 'none'; p.classList.add('on'); div.appendChild(p); DECODED[v] = true; return; }
+        DECODED[v] = true;
+        div.appendChild(p);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { p.classList.add('on'); }); });
+      }
+      im.onload = function () { if (im.decode) { im.decode().then(put, put); } else { put(); } };
+      im.onerror = function () { div.classList.add('fbk'); };
+      im.src = v;
+    }
+    (function next(i) {
+      if (i >= srcs.length) { div.classList.add('fbk'); return; }
+      resolve(srcs[i], function (v) { if (v) { show(v); } else { next(i + 1); } });
     })(0);
   }
   /* 시작 화면에 있는 동안 배경과 프로필 사진을 미리 받아둬요 */
   function preload() {
-    var list = [C.IMG && C.IMG.lockWallpaper, C.IMG && C.IMG.homeWallpaper];
+    var list = [C.IMG && C.IMG.lockWallpaper, C.IMG && C.IMG.homeWallpaper, (C.IMG && C.IMG.startBg) || './start-bg.jpg'];
     (C.TWEETS || []).forEach(function (t) { if (t && t.avatar) { list.push(t.avatar); } });
-    list.forEach(function (s) { if (s) { resolve(s, function () {}); } });
+    list.forEach(function (s) { if (s) { resolve(s, function (v) { if (v) { var im = new Image(); im.src = v; if (im.decode) { im.decode().then(function () { DECODED[v] = true; }, function () {}); } } }); } });
+    setTimeout(function () {
+      var more = [];
+      (C.TWEETS || []).forEach(function (t) { (t.images || []).forEach(function (x) { more.push(x); }); });
+      (C.GALLERY || []).forEach(function (p) { if (p && p.src) { more.push(p.src); } });
+      more.forEach(function (x) { resolve(x, function () {}); });
+    }, 400);
   }
   function avHtml(kind, name) {
     if (kind === 'person') { return '<div class="av">' + I.person + '</div>'; }
@@ -295,19 +329,13 @@
       '<button class="go" id="goBtn" type="button" disabled>시작</button></div></section>');
     phone.appendChild(s);
     (function () {
-      var list = variants((C.IMG && C.IMG.startBg) || './start-bg.jpg');
-      (function next(i) {
-        if (i >= list.length) { return; }
-        var im = new Image();
-        im.onload = function () {
-          s.style.backgroundImage = 'url("' + list[i] + '")';
-          s.style.backgroundSize = 'cover';
-          s.style.backgroundRepeat = 'no-repeat';
-          s.style.backgroundPosition = 'center';
-        };
-        im.onerror = function () { next(i + 1); };
-        im.src = list[i];
-      })(0);
+      resolve((C.IMG && C.IMG.startBg) || './start-bg.jpg', function (v) {
+        if (!v) { return; }
+        s.style.backgroundImage = 'url("' + v + '")';
+        s.style.backgroundSize = 'cover';
+        s.style.backgroundRepeat = 'no-repeat';
+        s.style.backgroundPosition = 'center';
+      });
     })();
     var inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
     function clean() {
@@ -422,7 +450,7 @@
     return '<button type="button" class="app" data-app="' + id + '"><div class="ico">' + icon + (extra || '') + '</div>' + (label ? '<span class="lb">' + esc(label) + '</span>' : '') + '</button>';
   }
   function buildHome() {
-    var weverse = appHtml('weverse', 'Weverse', ICO.weverseFb, '<img data-rm="1" src="' + esc(C.IMG.weverse) + '" alt="">');
+    var weverse = appHtml('weverse', 'Weverse', ICO.weverseFb);
     var h = el('<section class="layer home" id="home">' +
       '<div class="bgimg bg-home" id="homeBg"></div><div class="shade"></div>' + sbHtml('light') +
       '<div class="grid">' +
