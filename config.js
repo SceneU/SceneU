@@ -243,19 +243,19 @@ window.CONFIG = {
     { id: "d3",  name: "user_3047182", handle: "user_3047182", time: "07:53", followers: 0, following: 1, posts: 0,
       msgs: ["아이돌 여친이면 이 정도 각오는 했어야죠 ㅋㅋ"] },
     { id: "d4",  name: "k29481736",    handle: "k29481736",    time: "07:54", followers: 2, following: 4, posts: 0,
-      msgs: ["사진 다 봤는데 생각보다 평범하네요 ㅋㅋ"] },
+      msgs: ["어케꼬심?ㅋㅋ"] },
     { id: "d5",  name: "user90183746", handle: "user90183746", time: "07:55", followers: 0, following: 2, posts: 0,
       msgs: ["계정 지운다고 끝날 일 아닌 거 알죠?"] },
     { id: "d6",  name: "x_5029381",    handle: "x_5029381",    time: "07:55", followers: 3, following: 5, posts: 0,
-      msgs: ["팬들 속여놓고 연애질하니까 좋았어요?"] },
+      msgs: ["팬들 속여놓고 연애질하니까 좋았음?"] },
     { id: "d7",  name: "user71920384", handle: "user71920384", time: "07:56", followers: 0, following: 2, posts: 0,
       msgs: ["입장문 안 쓰세요? 본인도 한마디 해야죠"] },
     { id: "d8",  name: "m4820175",     handle: "m4820175",     time: "07:57", followers: 1, following: 1, posts: 0,
-      msgs: ["얼마나 잘났길래 그런 선택을 했는지 궁금하네요"] },
+      msgs: ["미친년"] },
     { id: "d9",  name: "user6603921",  handle: "user6603921",  time: "07:58", followers: 0, following: 3, posts: 0,
       msgs: ["캡처 이미 다 돌고 있어요 ㅋㅋ"] },
     { id: "d10", name: "z9028374",     handle: "z9028374",     time: "07:59", followers: 2, following: 2, posts: 0,
-      msgs: ["이제 와서 비공개로 돌려봤자 늦었죠"] }
+      msgs: ["ㅋㅋ이제 와서 비공개로 돌려봤자 늦었죠"] }
   ],
   DM_FIRST_DELAY: 2000,   // 처음 들어가고 첫 쪽지가 오기까지 (ms)
   DM_INTERVAL: 3000       // 이후 쪽지 도착 간격 (ms)
