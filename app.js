@@ -98,8 +98,10 @@
   I.home = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.500 11L12 3.500l8.500 7.500v9.500H14.500v-6h-5v6H3.500z"/></svg>';
   I.homeOn = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.500 11L12 3.500l8.500 7.500v9.500H14.500v-6h-5v6H3.500z"/></svg>';
   I.bell = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 17V11a6 6 0 0112 0v6l1.500 2h-15zM10 21h4"/></svg>';
-  I.mail = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5.500" width="18" height="13" rx="2.500"/><path d="M4 8l8 6 8-6"/></svg>';
-  I.mailOn = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5.500" width="18" height="13" rx="2.500"/><path d="M4 8l8 6 8-6" stroke="#fff"/></svg>';
+  I.mail = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.500c-5 0-9 3.400-9 7.700 0 2.500 1.400 4.700 3.600 6.100-.2 1.200-.9 2.400-1.900 3.300 2-.1 3.800-.9 5-1.900.7.200 1.500.3 2.300.3 5 0 9-3.400 9-7.800S17 3.500 12 3.500z"/></svg>';
+  I.mailOn = '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.500c-5 0-9 3.400-9 7.700 0 2.500 1.400 4.700 3.600 6.100-.2 1.200-.9 2.400-1.900 3.300 2-.1 3.800-.9 5-1.900.7.200 1.500.3 2.300.3 5 0 9-3.400 9-7.800S17 3.500 12 3.500z"/></svg>';
+  I.chatPlus = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.500c-4.700 0-8.500 3.200-8.500 7.200 0 2.300 1.300 4.400 3.400 5.700-.2 1.100-.8 2.200-1.800 3 1.900-.1 3.500-.8 4.700-1.800.7.200 1.400.3 2.200.3"/><path d="M17.500 12v7M14 15.500h7"/></svg>';
+  I.chevDn = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   I.sort = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20V5M4 9l4-4 4 4M16 4v15M12 15l4 4 4-4"/></svg>';
   I.pencil = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1-4.500L16.500 4a2 2 0 013 3L8 18.500z"/></svg>';
   I.lockSm = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="3" fill="currentColor" stroke="none"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>';
@@ -141,27 +143,60 @@
     EXT2.forEach(function (e) { add(m[1] + m[2] + e); });
     return out;
   }
+  /* 가능한 이름을 한꺼번에(동시에) 시도해서 제일 먼저 맞는 걸 쓰고, 찾은 이름은 기억해요 */
+  var RES = {}, RESW = {};
+  function resolve(src, cb) {
+    if (!src) { cb(null); return; }
+    if (RES[src] !== undefined) { cb(RES[src] || null); return; }
+    var w = RESW[src] || (RESW[src] = []);
+    w.push(cb);
+    if (w.length > 1) { return; }
+    var vs = variants(src), n = vs.length, ok = [];
+    function fin() {
+      if (RES[src] !== undefined) { return; }
+      for (var j = 0; j < n; j++) {
+        if (ok[j] === undefined) { return; }
+        if (ok[j]) { done(vs[j]); return; }
+      }
+      done('');
+    }
+    function done(v) {
+      RES[src] = v;
+      var list = RESW[src] || [];
+      RESW[src] = [];
+      list.forEach(function (f) { f(v || null); });
+    }
+    vs.forEach(function (v, i) {
+      var im = new Image();
+      im.onload = function () { ok[i] = true; fin(); };
+      im.onerror = function () { ok[i] = false; fin(); };
+      im.src = v;
+    });
+  }
+  function rs(src) { return (src && RES[src]) ? RES[src] : src; }
   function setBg(div, srcs) {
-    var all = [];
-    srcs.forEach(function (s) { variants(s).forEach(function (v) { all.push(v); }); });
-    srcs = all;
     (function next(i) {
       if (i >= srcs.length) { return; }
-      var im = new Image();
-      im.onload = function () { div.style.backgroundImage = 'url("' + srcs[i] + '")'; };
-      im.onerror = function () { next(i + 1); };
-      im.src = srcs[i];
+      resolve(srcs[i], function (v) {
+        if (v) { div.style.backgroundImage = 'url("' + v + '")'; } else { next(i + 1); }
+      });
     })(0);
+  }
+  /* 시작 화면에 있는 동안 배경과 프로필 사진을 미리 받아둬요 */
+  function preload() {
+    var list = [C.IMG && C.IMG.lockWallpaper, C.IMG && C.IMG.homeWallpaper];
+    (C.TWEETS || []).forEach(function (t) { if (t && t.avatar) { list.push(t.avatar); } });
+    list.forEach(function (s) { if (s) { resolve(s, function () {}); } });
   }
   function avHtml(kind, name) {
     if (kind === 'person') { return '<div class="av">' + I.person + '</div>'; }
     return '<div class="av">' + esc(String(name || '?').charAt(0)) + '</div>';
   }
   function imgTag(src, cls) {
-    return '<img ' + (cls ? 'class="' + cls + '" ' : '') + 'src="' + esc(src) + '" alt="" draggable="false">';
+    return '<img ' + (cls ? 'class="' + cls + '" ' : '') + 'src="' + esc(rs(src)) + '" alt="" draggable="false">';
   }
   function xav(src, fb) {
-    return '<div class="xav' + (fb === 'black' ? ' blk' : '') + '">' + I.person + (src ? '<img data-rm="1" src="' + esc(src) + '" alt="">' : '') + '</div>';
+    return '<div class="xav' + (fb === 'black' ? ' blk' : '') + '">' + I.person + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="">' : '') + '</div>';
   }
   function xavDefault() { return '<div class="xav">' + I.person + '</div>'; }
 
@@ -771,15 +806,15 @@
         var unread = !dmRead[d.id];
         var last = d.msgs[d.msgs.length - 1];
         rows += '<div class="dmr' + (unread ? ' unread' : '') + '" data-id="' + d.id + '">' + xavDefault() +
-          '<div class="mn"><div class="l1"><b>' + esc(d.name) + '</b><span>@' + esc(d.handle) + ' · ' + esc(d.time) + '</span></div><div class="pv">' + rich(last) + '</div></div>' +
-          (unread ? '<i class="ud"></i>' : '') + '</div>';
+          '<div class="mn"><div class="l1"><b>' + esc(d.name) + '</b><span class="tm">' + esc(d.time) + '</span></div><div class="l2"><div class="pv">' + rich(last) + '</div>' + (unread ? '<i class="ud"></i>' : '') + '</div></div></div>';
       }
       return rows || '<div class="dm-empty">아직 쪽지가 없어요</div>';
     }
     function renderDM() {
       base.innerHTML = sbHtml('dark') +
-        '<div class="dm-top"><div class="t1">쪽지</div><div class="sb2">' + I.search + '<span>쪽지 검색</span></div></div>' +
-        '<div class="dm-list">' + dmRows() + '</div>' + barHtml();
+        '<div class="dm-top"><div class="t1"><span class="me2">' + I.person.replace('<svg ', '<svg width="22" height="22" ').replace('fill="currentColor"', 'fill="#fff"') + '</span><b>Chat</b><span class="flt">전체' + I.chevDn + '</span></div><div class="sb2">' + I.search + '<span>검색</span></div></div>' +
+        '<div class="dm-list">' + dmRows() + '</div>' +
+        '<button class="fab" type="button" data-soon="1">' + I.chatPlus + '</button>' + barHtml();
       bindBar();
       qsa(base, '.dmr').forEach(function (r) {
         r.addEventListener('click', function () { openDM(r.getAttribute('data-id')); });
@@ -915,7 +950,7 @@
         '<div class="dmv-body"><div class="dmv-info">' + xavDefault() + '<b>' + esc(d.name) + '</b><span>@' + esc(d.handle) + '</span>' +
         '<small>2026년 10월 가입 · 팔로워 ' + d.followers + '명 · 팔로잉 ' + d.following + '명 · 게시물 ' + d.posts + '개</small></div>' +
         bub + '<div class="dbub"><div class="t">' + esc(d.time) + '</div></div></div>' +
-        '<div class="dm-in"><div>메시지 시작하기</div></div>', 'xa');
+        '<div class="dm-in"><span class="pl">' + I.plus.replace('width="20" height="20"', 'width="26" height="26"') + '</span><div><span>쪽지</span>' + I.mic.replace('width="18" height="18"', 'width="24" height="24"') + '</div></div>', 'xa');
       v.style.background = '#fff';
       qs(v, '.back').addEventListener('click', function () {
         popView(v, function () { updateBadge(); if (ctx.tab === 'dm') { renderDM(); } });
@@ -934,6 +969,7 @@
   function boot() {
     phone.classList.toggle('standalone', isStandalone());
     handleReset();
+    preload();
     if (loadUser()) { showLock(); } else { showStart(); }
     try {
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
