@@ -547,61 +547,7 @@ window.CONFIG = {
     { id: "d10", name: "z9028374",     handle: "z9028374",     time: "07:59", followers: 2, following: 2, posts: 0,
       msgs: ["ㅋㅋ이제 와서 비공개로 돌려봤자 늦었죠"] }
   ],
-   INSTA: {
-  bio: "",   // 프로필 소개글 (비워두면 안 보임)
-  posts: [   // 피드 3개 (사진은 저장소 맨 위에 ig-post-1.jpg ~ 3.jpg 로 올리기)
-    { img: "./ig-post-1.jpg", date: "2026-08-15", likes: 1, caption: "첫 번째 게시물 멘트는 여기에 적어요",
-      comments: [{ user: "jh_1107", text: "첫 번째 게시물 댓글은 여기에 적어요", time: "10주" }] },
-    { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "두 번째 게시물 멘트는 여기에 적어요",
-      comments: [{ user: "jh_1107", text: "두 번째 게시물 댓글은 여기에 적어요", time: "5주" }] },
-    { img: "./ig-post-3.jpg", date: "2026-10-05", likes: 1, caption: "세 번째 게시물 멘트는 여기에 적어요",
-      comments: [{ user: "jh_1107", text: "세 번째 게시물 댓글은 여기에 적어요", time: "3주" }] }
-  ],
-  stories: [ // 스토리 보관함 6개 (ig-story-1.jpg ~ 6.jpg)
-    { date: "2025-10-24", img: "./ig-story-1.jpg" },
-    { date: "2025-12-25", img: "./ig-story-2.jpg" },
-    { date: "2026-02-14", img: "./ig-story-3.jpg" },
-    { date: "2026-04-05", img: "./ig-story-4.jpg" },
-    { date: "2026-06-18", img: "./ig-story-5.jpg" },
-    { date: "2026-08-30", img: "./ig-story-6.jpg" }
-  ],  // requests: ["아이디1","아이디2",...]  ← 팔로우 요청을 직접 정할 때만 (없으면 자동 47개)
-// kind: mention=스토리 태그 / share=스토리 공유 / story=스토리 답장 → 전부 '스토리를 볼 수 없습니다'로 표시
-// kind 없이 text만 있으면 일반 대화 말풍선, from: them=상대 / me=나
-// story: 3 → 내가 공유한 스토리로 보관함의 3번째(ig-story-3.jpg) 사진을 보여줘요 (kind:"share", from:"me" 일 때)
-// requests: ["아이디",...] 를 추가하면 팔로우 요청 목록을 직접 정할 수 있어요 (없으면 자동 47개)
-INSTA: {
-  bio: "",
-  posts: [
-    { img: "./ig-post-1.jpg", date: "2026-08-15", likes: 1, caption: "나 놓고 혼자 파리가니까 좋아?",
-      comments: [{ user: "jh_1107", text: "아앙 그래서 카톡 보내는 중...", time: "10주" }] },
-    { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "하루종일 치이카와 치이키와 나보다 치이카와가 좋음?",
-      comments: [{ user: "jh_1107", text: "아니라고 2947번째 반성 중입니다", time: "5주" }] },
-    { img: "./ig-post-3.jpg", date: "2026-06-18", likes: 1, caption: "💕",
-      comments: [{ user: "jh_1107", text: "사랑해", time: "18주" }] }
-  ],
-  stories: [
-    { date: "2025-10-24", img: "./ig-story-1.jpg" },
-    { date: "2025-12-25", img: "./ig-story-2.jpg" },
-    { date: "2026-02-14", img: "./ig-story-3.jpg" },
-    { date: "2026-04-05", img: "./ig-story-4.jpg" },
-    { date: "2026-06-18", img: "./ig-story-5.jpg" },
-    { date: "2026-08-30", img: "./ig-story-6.jpg" }
-  ],
-  dm: {
-    user: "jh_1107",
-    msgs: [
-      { d: "2026-08-12", t: "22:41", from: "them", kind: "mention", text: "" },
-      { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "" },
-      { d: "2026-09-11", t: "19:05", from: "them", kind: "mention", text: "" },
-      { d: "2026-09-20", t: "23:02", from: "them", kind: "mention", text: "" },
-      { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
-      { d: "2026-10-01", t: "18:30", from: "me", kind: "share", story: 3, text: "" },
-      { d: "2026-10-06", t: "08:30", from: "them", text: "에휴" },
-      { d: "2026-10-06", t: "08:41", from: "me", text: "아 재밌다" },
-      { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
-    ]
-  }
-},
+
   DM_FIRST_DELAY: 4000,   // 처음 들어가고 첫 쪽지가 오기까지 (ms)
   DM_INTERVAL: 3000       // 이후 쪽지 도착 간격 (ms)
 };
