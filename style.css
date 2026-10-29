@@ -332,7 +332,7 @@ svg{display:block}
 .dbody .meta{font-size:14px;color:#536471;margin:14px 0 4px;padding-bottom:12px;border-bottom:1px solid #eff3f4}
 .dbody .meta b{color:#0f1419}
 .dbody .acts{justify-content:space-between;padding:8px 0;border-bottom:1px solid #eff3f4;margin:0}
-.dbody .acts .gr{color:#00ba7c}
+.dbody .acts .gr{color:#536471}
 .lockbox{display:flex;align-items:center;gap:12px;margin:14px 0;padding:16px;border-radius:14px;background:#e7ebee;color:#6b7680;font-size:15px}
 .rp{display:flex;gap:12px;padding:12px 0;border-top:1px solid #eff3f4}
 .rp .hd{display:flex;gap:4px;font-size:15px}.rp .hd b{font-weight:700}.rp .hd span{color:#536471}
