@@ -547,6 +547,39 @@ window.CONFIG = {
     { id: "d10", name: "z9028374",     handle: "z9028374",     time: "07:59", followers: 2, following: 2, posts: 0,
       msgs: ["ㅋㅋ이제 와서 비공개로 돌려봤자 늦었죠"] }
   ],
+   INSTA: {
+  bio: "",   // 프로필 소개글 (비워두면 안 보임)
+  posts: [   // 피드 3개 (사진은 저장소 맨 위에 ig-post-1.jpg ~ 3.jpg 로 올리기)
+    { img: "./ig-post-1.jpg", date: "2026-08-15", likes: 1, caption: "첫 번째 게시물 멘트는 여기에 적어요",
+      comments: [{ user: "jh_1107", text: "첫 번째 게시물 댓글은 여기에 적어요", time: "10주" }] },
+    { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "두 번째 게시물 멘트는 여기에 적어요",
+      comments: [{ user: "jh_1107", text: "두 번째 게시물 댓글은 여기에 적어요", time: "5주" }] },
+    { img: "./ig-post-3.jpg", date: "2026-10-05", likes: 1, caption: "세 번째 게시물 멘트는 여기에 적어요",
+      comments: [{ user: "jh_1107", text: "세 번째 게시물 댓글은 여기에 적어요", time: "3주" }] }
+  ],
+  stories: [ // 스토리 보관함 6개 (ig-story-1.jpg ~ 6.jpg)
+    { date: "2025-10-24", img: "./ig-story-1.jpg" },
+    { date: "2025-12-25", img: "./ig-story-2.jpg" },
+    { date: "2026-02-14", img: "./ig-story-3.jpg" },
+    { date: "2026-04-05", img: "./ig-story-4.jpg" },
+    { date: "2026-06-18", img: "./ig-story-5.jpg" },
+    { date: "2026-08-30", img: "./ig-story-6.jpg" }
+  ],
+  // requests: ["아이디1","아이디2",...]  ← 팔로우 요청 목록을 직접 정하고 싶을 때만 추가 (없으면 알계 아이디 47개 자동 생성)
+  dm: { user: "jh_1107", msgs: [   // from: "them"=상대, "me"=플레이어
+    // kind: "story"=스토리 답장 / "mention"=스토리 태그(언급) / "share"=스토리 공유 → 전부 만료된 카드로 표시, text는 비워도 됨
+    { d: "2026-08-12", t: "22:41", from: "them", kind: "mention", text: "" },
+    { d: "2026-08-12", t: "22:43", from: "them", kind: "story", text: "스토리 답장 내용을 여기에 적어요" },
+    { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "태그한 스토리에 대한 멘트를 여기에 적어요" },
+    { d: "2026-09-02", t: "21:14", from: "me", text: "내 답장 내용을 여기에 적어요" },
+    { d: "2026-09-11", t: "19:05", from: "them", kind: "share", text: "" },
+    { d: "2026-09-20", t: "23:02", from: "them", kind: "story", text: "또 다른 스토리 답장 내용을 여기에 적어요" },
+    { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
+    { d: "2026-10-01", t: "18:30", from: "me", kind: "share", text: "공유한 스토리에 붙인 멘트를 여기에 적어요" },
+    { d: "2026-10-06", t: "08:30", from: "them", kind: "story", text: "마지막 스토리 답장 내용을 여기에 적어요" },
+    { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
+  ] }
+},
   DM_FIRST_DELAY: 4000,   // 처음 들어가고 첫 쪽지가 오기까지 (ms)
   DM_INTERVAL: 3000       // 이후 쪽지 도착 간격 (ms)
 };
