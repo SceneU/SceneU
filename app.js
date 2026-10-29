@@ -305,7 +305,11 @@
     clearLayers();
     passBuf = ''; passOn = false;
     setHB('light');
-    var notifs = C.NOTIFS.map(function (n) {
+    var pastDms = [];
+    for (var pi = Math.min(dmArrived, C.DMS.length) - 1; pi >= 0 && pastDms.length < 3; pi--) {
+      if (!dmRead[C.DMS[pi].id]) { pastDms.push(dmNotifHtml(C.DMS[pi])); }
+    }
+    var notifs = pastDms.join('') + C.NOTIFS.map(function (n) {
       return '<div class="notif"><div class="ic">' + ICO.phone + '</div><div class="tx"><b>' + esc(n.name) + '</b><span>' + esc(n.text) + '</span></div><div class="tm">' + esc(n.time) + '</div></div>';
     }).join('');
     var keys = '';
@@ -326,6 +330,7 @@
     phone.appendChild(hbHit); phone.appendChild(hb);
     L.lock = l;
     setBg(qs(l, '#lockBg'), [C.IMG.lockWallpaper]);
+    startDMs();
     qs(l, '#lkHit').addEventListener('click', showPass);
     swipeDetect(l, function (dx, dy) { if (!passOn && dy < -50 && Math.abs(dy) > Math.abs(dx)) { showPass(); } });
     qsa(l, '.key[data-k]').forEach(function (k) {
@@ -542,7 +547,29 @@
      문자 앱
      ========================================================= */
   var msgUnread = null;
+  var smsLoaded = false, smsOrder = [];
+  function loadSms() {
+    if (smsLoaded) { return; }
+    smsLoaded = true;
+    try {
+      var all = JSON.parse(store.get('ourday.sms') || '{}');
+      smsOrder = JSON.parse(store.get('ourday.smsOrder') || '[]');
+      C.MESSAGES.forEach(function (m) {
+        (all[m.id] || []).forEach(function (t) { m.msgs.push({ from: 'me', time: '08:00', text: t }); m.delivered = true; });
+      });
+    } catch (e) {}
+  }
+  function saveSms(id, text) {
+    var all = {};
+    try { all = JSON.parse(store.get('ourday.sms') || '{}'); } catch (e) {}
+    (all[id] = all[id] || []).push(text);
+    store.set('ourday.sms', JSON.stringify(all));
+    smsOrder = smsOrder.filter(function (x) { return x !== id; });
+    smsOrder.unshift(id);
+    store.set('ourday.smsOrder', JSON.stringify(smsOrder));
+  }
   IMPL.messages = function (layer) {
+    loadSms();
     setHB('dark');
     if (!msgUnread) { msgUnread = {}; C.MESSAGES.forEach(function (m) { msgUnread[m.id] = !!m.unread; }); }
     layer.innerHTML = '<div class="ms" style="position:absolute;inset:0;background:#fff">' + sbHtml('dark') +
@@ -551,11 +578,15 @@
       '<div class="ms-top"><span class="txt">편집</span><span class="txt">' + I.pencil + '</span></div></div>';
     function renderList() {
       var html = '';
-      C.MESSAGES.forEach(function (m) {
+      var ordered = [];
+      smsOrder.forEach(function (id) { C.MESSAGES.forEach(function (m) { if (m.id === id) { ordered.push(m); } }); });
+      C.MESSAGES.forEach(function (m) { if (smsOrder.indexOf(m.id) === -1) { ordered.push(m); } });
+      ordered.forEach(function (m) {
         var last = m.msgs[m.msgs.length - 1];
+        var lt = smsOrder.indexOf(m.id) !== -1 ? '08:00' : m.listTime;
         html += '<div class="trow" data-id="' + m.id + '">' + (msgUnread[m.id] ? '<i class="dot"></i>' : '') +
           avHtml(m.kind === 'spam' ? 'person' : 'initial', m.name) +
-          '<div class="mid"><div class="l1"><b>' + esc(m.name) + '</b><span>' + esc(m.listTime) + ' ' + I.chevR + '</span></div><div class="pv">' + esc(last.text) + '</div></div></div>';
+          '<div class="mid"><div class="l1"><b>' + esc(m.name) + '</b><span>' + esc(lt) + ' ' + I.chevR + '</span></div><div class="pv">' + esc(last.text) + '</div></div></div>';
       });
       qs(layer, '#threads').innerHTML = html;
       qsa(layer, '.trow').forEach(function (r) {
@@ -575,7 +606,13 @@
     msgUnread[id] = false;
     var spam = m.kind === 'spam';
     var bubs = '', prev = '';
-    m.msgs.forEach(function (g, i) {
+    var shown = m.msgs.slice();
+    var replyStart = -1;
+    if (smsOrder.indexOf(m.id) !== -1) {
+      for (var ri = shown.length - 1; ri >= 0 && shown[ri].time === '08:00' && shown[ri].from === 'me'; ri--) { replyStart = ri; }
+    }
+    shown.forEach(function (g, i) {
+      if (i === replyStart) { bubs += '<div class="divd">오늘 08:00</div>'; }
       bubs += '<div class="bub ' + g.from + (prev && prev !== g.from ? ' gap' : '') + '"><div class="b">' + linkify(g.text) + '</div><span class="tt">' + esc(g.time) + '</span></div>';
       prev = g.from;
     });
@@ -584,10 +621,36 @@
       '<div class="c">' + avHtml(spam ? 'person' : 'initial', m.name) + '<span>' + esc(m.name) + ' ' + '</span></div><span style="margin-top:6px">' + I.video + '</span></div>' +
       '<div class="th-body" id="thb"><div class="divd">' + esc(m.divider) + '</div>' +
       (spam ? '<div class="note-s">문자(SMS) · 발신자 정보 없음</div>' : '') + bubs +
-      (m.delivered ? '<div class="deliv">전달됨</div>' : '') + '</div>' +
-      '<div class="th-in"><div class="pl">' + I.plus + '</div><div class="bx"><span>문자 메시지</span>' + I.mic + '</div></div>', 'ms');
+      '<div class="deliv" id="dlv" style="display:' + (m.delivered && m.msgs[m.msgs.length - 1].from === 'me' ? 'block' : 'none') + '">전달됨</div></div>' +
+      (spam
+        ? '<div class="th-in"><div class="pl">' + I.plus + '</div><div class="bx"><span>문자 메시지</span>' + I.mic + '</div></div>'
+        : '<form class="th-in" id="thForm" action="#"><div class="pl">' + I.plus + '</div><div class="bx"><input id="thQ" type="text" enterkeyhint="send" placeholder="문자 메시지" autocomplete="off" autocapitalize="off" spellcheck="false"><span class="mic">' + I.mic + '</span><button type="submit" class="snd" aria-label="보내기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></form>'), 'ms');
     v.style.background = '#fff';
     var body = qs(v, '#thb');
+    var thForm = qs(v, '#thForm');
+    if (thForm) {
+      var q = qs(v, '#thQ'), bx = qs(v, '.th-in .bx');
+      var repliedOnce = m.msgs.some(function (x) { return x.time === '08:00' && x.from === 'me' && smsOrder.indexOf(m.id) !== -1; });
+      q.addEventListener('input', function () { bx.classList.toggle('has', q.value.length > 0); });
+      thForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = String(q.value || '').replace(/^\s+|\s+$/g, '');
+        if (!text) { return; }
+        var dl = qs(v, '#dlv');
+        var lastFrom = m.msgs[m.msgs.length - 1].from;
+        if (!repliedOnce) {
+          dl.insertAdjacentHTML('beforebegin', '<div class="divd">오늘 08:00</div>');
+          repliedOnce = true;
+        }
+        dl.insertAdjacentHTML('beforebegin', '<div class="bub me' + (lastFrom !== 'me' ? ' gap' : '') + '"><div class="b">' + linkify(text) + '</div><span class="tt">08:00</span></div>');
+        m.msgs.push({ from: 'me', time: '08:00', text: text });
+        m.delivered = true;
+        saveSms(m.id, text);
+        dl.style.display = 'block';
+        q.value = ''; bx.classList.remove('has');
+        body.scrollTop = body.scrollHeight;
+      });
+    }
     requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
     setTimeout(function () { body.scrollTop = body.scrollHeight; }, 320);
     qs(v, '.back').addEventListener('click', function () { popView(v, onClose); });
@@ -605,6 +668,150 @@
     });
     body.addEventListener('pointercancel', function () { if (timer) { clearTimeout(timer); timer = null; } });
   }
+
+  /* =========================================================
+     카카오톡 앱
+     ========================================================= */
+  var kkUnread = null;
+  IMPL.kakao = function (layer) {
+    setHB('dark');
+    var K = C.KAKAO || { FRIENDS: [], ROOMS: {} };
+    var TODAY = [2026, 10, 24];
+    var WD = ['일', '월', '화', '수', '목', '금', '토'];
+    if (!kkUnread) { kkUnread = {}; Object.keys(K.ROOMS).forEach(function (n) { kkUnread[n] = K.ROOMS[n].unread || 0; }); }
+    var tab = 'friends';
+    var kic = {
+      search: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><circle cx="10.500" cy="10.500" r="6.500"/><path d="M15.500 15.500L21 21"/></svg>',
+      add: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.900" stroke-linecap="round"><circle cx="9.500" cy="8" r="3.600"/><path d="M2.500 20c.5-3.800 3.300-5.600 7-5.600M18 10v7M14.500 13.500h7"/></svg>',
+      music: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/></svg>',
+      gear: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.900" stroke-linejoin="round"><circle cx="12" cy="12" r="3.200"/><path d="M19.400 13a7.800 7.800 0 000-2l2-1.500-2-3.400-2.300.9a7.600 7.600 0 00-1.700-1l-.4-2.500h-4l-.4 2.500a7.600 7.600 0 00-1.700 1l-2.300-.9-2 3.400 2 1.500a7.800 7.800 0 000 2l-2 1.500 2 3.400 2.300-.9c.5.400 1.100.7 1.700 1l.4 2.500h4l.4-2.500c.6-.3 1.200-.6 1.700-1l2.300.9 2-3.400z"/></svg>',
+      newchat: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.900" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C7 4 3 7.200 3 11.200c0 2.400 1.400 4.500 3.600 5.800-.2 1.200-.9 2.300-1.900 3.200 2-.1 3.700-.9 4.900-1.900.8.200 1.500.3 2.400.3 5 0 9-3.200 9-7.400"/><path d="M18 3v6M15 6h6"/></svg>',
+      tFriends: '<svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7.500" r="4.200"/><path d="M3.800 21c.6-4.600 4-7 8.200-7s7.600 2.400 8.200 7z"/></svg>',
+      tChat: '<svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg>',
+      tOpen: '<svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/><circle cx="8" cy="11" r="1.200" fill="#fff"/><circle cx="12" cy="11" r="1.200" fill="#fff"/><circle cx="16" cy="11" r="1.200" fill="#fff"/></svg>',
+      tMore: '<svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2.200"/><circle cx="12" cy="12" r="2.200"/><circle cx="19" cy="12" r="2.200"/></svg>',
+      plus: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+      emo: '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.800" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.500 14c.8 1.500 2 2.200 3.500 2.200s2.700-.7 3.500-2.200"/><circle cx="9" cy="10" r=".6" fill="#333"/><circle cx="15" cy="10" r=".6" fill="#333"/></svg>',
+      hash: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><path d="M9 4L7 20M17 4l-2 20M4 9h17M3 15h17"/></svg>',
+      menu: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
+    };
+    function avK(size) {
+      return '<div class="kk-av"' + (size ? ' style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.37) + 'px"' : '') + '>' + I.person.replace('<svg ', '<svg width="' + Math.round((size || 48) * 0.62) + '" height="' + Math.round((size || 48) * 0.62) + '" ') + '</div>';
+    }
+    function pd(d) { var a = d.split('-'); return [parseInt(a[0], 10), parseInt(a[1], 10), parseInt(a[2], 10)]; }
+    function ktime(t) {
+      var a = t.split(':'), h = parseInt(a[0], 10), m = a[1];
+      return (h < 12 ? '오전 ' : '오후 ') + (h % 12 === 0 ? 12 : h % 12) + ':' + m;
+    }
+    function listTime(g) {
+      var d = pd(g.d);
+      if (d[0] === TODAY[0] && d[1] === TODAY[1] && d[2] === TODAY[2]) { return ktime(g.t); }
+      if (d[0] === TODAY[0] && d[1] === TODAY[1] && d[2] === TODAY[2] - 1) { return '어제'; }
+      if (d[0] === TODAY[0]) { return d[1] + '월 ' + d[2] + '일'; }
+      return d[0] + '. ' + d[1] + '. ' + d[2];
+    }
+    function longDate(d) {
+      var a = pd(d), wd = WD[new Date(a[0], a[1] - 1, a[2]).getDay()];
+      return a[0] + '년 ' + a[1] + '월 ' + a[2] + '일 ' + wd + '요일';
+    }
+    function totalUnread() { var n = 0; Object.keys(kkUnread).forEach(function (k) { n += kkUnread[k] || 0; }); return n; }
+    var main;
+    layer.innerHTML = '<div class="kk" style="position:absolute;inset:0;background:#fff"><div id="kkMain"></div></div>';
+    main = qs(layer, '#kkMain');
+    function barHtml() {
+      var u = totalUnread();
+      function t(id, ic, label, soonOnly) {
+        return '<button type="button" class="' + (tab === id ? 'on' : '') + '" data-t="' + id + '"' + (soonOnly ? ' data-soon="1"' : '') + '>' + ic + '<span>' + label + '</span>' + (id === 'chats' && u > 0 ? '<i class="bd">' + u + '</i>' : '') + '</button>';
+      }
+      return '<div class="kk-bar">' + t('friends', kic.tFriends, '친구') + t('chats', kic.tChat, '채팅') + t('open', kic.tOpen, '오픈채팅', true) + t('more', kic.tMore, '더보기', true) + '</div>';
+    }
+    function bindBar() {
+      qsa(main, '.kk-bar button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (b.getAttribute('data-soon')) { soon(); return; }
+          var t = b.getAttribute('data-t');
+          if (t !== tab) { tab = t; render(); }
+        });
+      });
+    }
+    function friendsSorted() {
+      return K.FRIENDS.slice().sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+    }
+    function renderFriends() {
+      var rows = friendsSorted().map(function (n) {
+        return '<div class="kk-row" data-f="' + esc(n) + '">' + avK(46) + '<div class="nm">' + esc(n) + '</div></div>';
+      }).join('');
+      main.innerHTML = sbHtml('dark') +
+        '<div class="kk-head"><h1>친구</h1><div class="ics">' + kic.search + kic.add + kic.music + kic.gear + '</div></div>' +
+        '<div class="kk-list"><div class="kk-row me" data-me="1">' + avK(54) + '<div class="nm"><b>' + esc(USER.name) + '</b></div></div>' +
+        '<div class="kk-sec">친구 ' + K.FRIENDS.length + '<span>' + '﹀' + '</span></div>' + rows + '<div style="height:20px"></div></div>' + barHtml();
+      bindBar();
+      qsa(main, '.kk-row[data-f]').forEach(function (r) {
+        r.addEventListener('click', function () { openProfile(r.getAttribute('data-f')); });
+      });
+    }
+    function chatRooms() {
+      var list = [];
+      K.FRIENDS.forEach(function (n) {
+        var r = K.ROOMS[n];
+        if (r && r.msgs && r.msgs.length) { list.push({ name: n, last: r.msgs[r.msgs.length - 1] }); }
+      });
+      list.sort(function (a, b) { return (b.last.d + ' ' + b.last.t).localeCompare(a.last.d + ' ' + a.last.t); });
+      return list;
+    }
+    function renderChats() {
+      var rows = chatRooms().map(function (r) {
+        var u = kkUnread[r.name] || 0;
+        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + esc(r.last.text) + '</div></div>' +
+          '<div class="rt"><span class="tm">' + esc(listTime(r.last)) + '</span>' + (u > 0 ? '<i class="bd">' + u + '</i>' : '') + '</div></div>';
+      }).join('');
+      main.innerHTML = sbHtml('dark') +
+        '<div class="kk-head"><h1>채팅</h1><div class="ics">' + kic.search + kic.newchat + kic.gear + '</div></div>' +
+        '<div class="kk-list">' + (rows || '<div class="kk-empty">채팅방이 없어요</div>') + '<div style="height:20px"></div></div>' + barHtml();
+      bindBar();
+      qsa(main, '.kk-row[data-f]').forEach(function (r) {
+        r.addEventListener('click', function () { openRoom(r.getAttribute('data-f')); });
+      });
+    }
+    function render() { if (tab === 'friends') { renderFriends(); } else { renderChats(); } }
+    function openProfile(name) {
+      var v = pushView(layer, sbHtml('light') +
+        '<div class="kp-top"><button type="button" class="x" aria-label="닫기"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>' +
+        '<div class="kp-mid">' + avK(104) + '<div class="n">' + esc(name) + '</div></div>' +
+        '<div class="kp-btm"><button type="button" class="chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg><span>1:1 채팅</span></button></div>', 'kp');
+      qs(v, '.x').addEventListener('click', function () { popView(v); });
+      qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); });
+    }
+    function openRoom(name) {
+      var room = K.ROOMS[name] || { msgs: [] };
+      kkUnread[name] = 0;
+      var html = '', prevD = '', prevFrom = '', msgs = room.msgs;
+      msgs.forEach(function (g, i) {
+        var nx = msgs[i + 1];
+        if (g.d !== prevD) { html += '<div class="kr-date"><span>' + longDate(g.d) + '</span></div>'; prevFrom = ''; }
+        var first = g.from !== prevFrom;
+        var showTime = !nx || nx.from !== g.from || nx.t !== g.t || nx.d !== g.d;
+        var tm = showTime ? '<span class="ktm">' + ktime(g.t) + '</span>' : '';
+        if (g.from === 'me') {
+          html += '<div class="kr-msg me' + (first ? ' first' : '') + '">' + tm + '<div class="kb">' + esc(g.text) + '</div></div>';
+        } else {
+          html += '<div class="kr-msg them' + (first ? ' first' : '') + '">' + (first ? avK(40) : '<div class="ksp"></div>') +
+            '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + esc(g.text) + '</div>' + tm + '</div></div></div>';
+        }
+        prevD = g.d; prevFrom = g.from;
+      });
+      var v = pushView(layer, sbHtml('dark') +
+        '<div class="kr-top"><button type="button" class="back">' + I.back + '</button><b>' + esc(name) + '</b><div class="ics">' + kic.search + kic.menu + '</div></div>' +
+        '<div class="kr-body" id="krb">' + html + '<div style="height:12px"></div></div>' +
+        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><span>메시지 입력</span>' + kic.emo + '</div><span class="hs">' + kic.hash + '</span></div>', 'kr');
+      v.style.background = '#b2c7da';
+      var body = qs(v, '#krb');
+      requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
+      setTimeout(function () { body.scrollTop = body.scrollHeight; }, 320);
+      qs(v, '.back').addEventListener('click', function () { popView(v, function () { render(); }); });
+    }
+    render();
+  };
 
   /* =========================================================
      사진 앱
@@ -748,17 +955,36 @@
     setTimeout(function () { b.classList.remove('on'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
+  function dmNotifHtml(d) {
+    return '<div class="notif dmn"><div class="ic">' + ICO.x + '</div><div class="tx"><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div><div class="tm">방금</div></div>';
+  }
+  function addLockNotif(d) {
+    if (!L.lock) { return; }
+    var box = qs(L.lock, '.notifs');
+    if (!box) { return; }
+    var n = el(dmNotifHtml(d));
+    n.classList.add('pop');
+    box.insertBefore(n, box.firstChild);
+    var dms = qsa(box, '.dmn');
+    while (dms.length > 3) { dms[dms.length - 1].remove(); dms.pop(); }
+  }
+  /* 쪽지는 트위터를 열지 않아도 시간차를 두고 계속 도착해요(잠금화면에는 알림으로, 그 밖에는 위에서 내려오는 배너로) */
   function startDMs() {
     if (dmStarted || dmArrived >= C.DMS.length) { return; }
     dmStarted = true;
-    var first = dmArrived === 0;
+    function gap() {
+      var lo = C.DM_GAP_MIN || 7000, hi = C.DM_GAP_MAX || 15000;
+      return lo + Math.random() * (hi - lo);
+    }
     function step() {
       dmArrived++;
       store.set('ourday.dm', String(dmArrived));
-      if (first && dmArrived === 1) { bannerShow(C.DMS[0]); }
+      var d = C.DMS[dmArrived - 1];
+      if (current === 'lock') { addLockNotif(d); }
+      else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
       updateBadge();
       if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }
-      if (dmArrived < C.DMS.length) { setTimeout(step, C.DM_INTERVAL); }
+      if (dmArrived < C.DMS.length) { setTimeout(step, gap()); }
     }
     setTimeout(step, C.DM_FIRST_DELAY);
   }

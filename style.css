@@ -496,3 +496,73 @@ svg{display:block}
 .ex-top .sbx input{flex:1;min-width:0;border:0;background:transparent;outline:0;font:inherit;font-size:17px;color:#0f1419;-webkit-appearance:none;appearance:none}
 .ex-top .sbx input::placeholder{color:#8b8b8b}
 .ex-top .sbx input::-webkit-search-cancel-button{display:none}
+
+/* ---- 문자 답장 입력 ---- */
+.th-in .bx{position:relative}
+.th-in .bx input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:16px;color:#000;-webkit-appearance:none;appearance:none}
+.th-in .bx input::placeholder{color:#aeaeb2}
+.th-in .bx .mic{display:flex;color:#8e8e93}
+.th-in .bx .snd{display:none;width:28px;height:28px;border-radius:50%;background:#34c759;align-items:center;justify-content:center;border:0;padding:0;flex:none}
+.th-in .bx.has .mic{display:none}
+.th-in .bx.has .snd{display:flex}
+.th-in .bx{padding-right:5px}
+/* ---- 잠금화면 쪽지 알림 ---- */
+.notif.pop{animation:notifPop .45s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes notifPop{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+
+/* ---- 카카오톡 ---- */
+.kk{color:#111}
+.kk-head{position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(var(--top) + 4px) 18px 8px;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.kk-head h1{margin:0;font-size:23px;font-weight:700;letter-spacing:-.4px}
+.kk-head .ics{display:flex;gap:16px;align-items:center}
+.kk-list{position:absolute;inset:0;overflow-y:auto;padding:calc(var(--top) + 56px) 0 100px}
+.kk-av{width:48px;height:48px;border-radius:18px;background:#d5d8de;color:#fff;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+.kk-row{display:flex;align-items:center;gap:12px;padding:8px 18px;cursor:pointer}
+.kk-row .nm{font-size:16px;color:#111}
+.kk-row.me{padding:12px 18px 14px;border-bottom:1px solid #f0f0f0}
+.kk-row.me .nm b{font-size:17px;font-weight:700}
+.kk-sec{font-size:13px;color:#8e8e93;padding:12px 18px 4px;display:flex;justify-content:space-between}
+.kk-row.ch{padding:10px 18px}
+.kk-row .mid{flex:1;min-width:0}
+.kk-row .l1 b{font-size:16px;font-weight:600}
+.kk-row .pv{font-size:14px;color:#8e8e93;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kk-row .rt{display:flex;flex-direction:column;align-items:flex-end;gap:6px;align-self:flex-start;padding-top:3px}
+.kk-row .tm{font-size:12px;color:#a0a0a5}
+.bd{font-style:normal;min-width:20px;height:20px;border-radius:10px;background:#ff5a4f;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.kk-empty{text-align:center;color:#8e8e93;padding:80px 20px;font-size:15px}
+.kk-bar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--sab) + 70px);padding:6px 6px var(--sab);display:flex;background:rgba(255,255,255,.97);border-top:1px solid #ececec;z-index:7}
+.kk-bar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;color:#b5b5ba;position:relative;padding-top:4px}
+.kk-bar button.on{color:#111}
+.kk-bar button span{font-size:11px;font-weight:500}
+.kk-bar .bd{position:absolute;top:0;left:calc(50% + 6px);min-width:18px;height:18px;font-size:11px}
+.kp{background:linear-gradient(#69707c,#4a505b)}
+.kp-top{position:absolute;top:0;left:0;right:0;padding:calc(var(--top) + 6px) 14px 0}
+.kp-top .x{padding:6px;display:flex}
+.kp-mid{position:absolute;left:0;right:0;top:32%;display:flex;flex-direction:column;align-items:center;gap:16px;color:#fff}
+.kp-mid .n{font-size:22px;font-weight:700}
+.kp-btm{position:absolute;left:0;right:0;bottom:0;padding:18px 20px calc(var(--sab) + 36px);border-top:1px solid rgba(255,255,255,.18);display:flex;justify-content:center}
+.kp-btm .chat{display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-size:13px}
+.kr{background:#b2c7da}
+.kr-top{position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(var(--top) + 2px) 12px 10px;display:flex;align-items:center;gap:10px;background:#b2c7da}
+.kr-top b{flex:1;font-size:18px;font-weight:700}
+.kr-top .back{display:flex;padding:4px;color:#111}
+.kr-top .ics{display:flex;gap:16px}
+.kr-body{position:absolute;inset:0;overflow-y:auto;padding:calc(var(--top) + 58px) 12px 90px}
+.kr-date{text-align:center;margin:16px 0 10px}
+.kr-date span{display:inline-block;background:rgba(0,0,0,.22);color:#fff;font-size:12px;border-radius:12px;padding:5px 14px}
+.kr-msg{display:flex;margin-top:4px;align-items:flex-start;gap:8px}
+.kr-msg.first{margin-top:12px}
+.kr-msg .kb{max-width:230px;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;word-break:break-word;white-space:pre-wrap}
+.kr-msg.them .kb{background:#fff;color:#111;border-top-left-radius:4px}
+.kr-msg.them:not(.first) .kb{border-top-left-radius:14px}
+.kr-msg .ksp{width:40px;flex:none}
+.kr-msg .knm{font-size:13px;color:#333;margin-bottom:4px}
+.kr-msg .kcol{display:flex;flex-direction:column;min-width:0}
+.kr-msg .krow{display:flex;align-items:flex-end;gap:6px}
+.kr-msg .ktm{font-size:11px;color:#4e5d6b;white-space:nowrap;padding-bottom:2px}
+.kr-msg.me{justify-content:flex-end;align-items:flex-end;gap:6px}
+.kr-msg.me .kb{background:#fee500;color:#111;border-top-right-radius:4px}
+.kr-msg.me:not(.first) .kb{border-top-right-radius:14px}
+.kr-in{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(var(--sab) + 18px);display:flex;align-items:center;gap:8px;background:#fff}
+.kr-in .fld{flex:1;height:38px;border-radius:19px;background:#f2f2f2;display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#9a9a9f;font-size:15px}
+.kr-in .pl,.kr-in .hs{width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex:none}
