@@ -56,7 +56,10 @@ svg{display:block}
 .lk-top{position:absolute;left:0;right:0;top:calc(var(--top) + 18px);display:flex;flex-direction:column;align-items:center}
 .lk-date{margin-top:10px;font-size:20px;font-weight:600;letter-spacing:-.2px;text-shadow:0 1px 8px rgba(0,0,0,.25)}
 .lk-time{font-size:98px;font-weight:700;line-height:1.02;letter-spacing:-3px;text-shadow:0 2px 14px rgba(0,0,0,.25)}
-.notifs{position:absolute;left:12px;right:12px;bottom:calc(var(--sab) + 190px);display:flex;flex-direction:column;gap:8px}
+.notifs{position:absolute;left:12px;right:12px;top:calc(var(--top) + 196px);bottom:calc(var(--sab) + 150px);display:flex;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;touch-action:pan-y}
+.notifs::-webkit-scrollbar{display:none}
+.notifs::before{content:'';margin-top:auto}
+.notifs>.notif{flex:none}
 .notif{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:22px;color:#111;
   background:rgba(236,236,242,.9);will-change:transform}
 .notif .ic{width:40px;height:40px;border-radius:10px;flex:none;overflow:hidden}
@@ -598,7 +601,7 @@ svg{display:block}
 .me-av svg{display:block;width:100%;height:100%}
 
 .notif.grp{background:rgba(236,236,242,.9)}
-.notif{touch-action:none;-webkit-user-select:none;user-select:none}
+.notif{-webkit-user-select:none;user-select:none}
 
 .kp-avw{position:relative;width:104px;height:104px}
 .kp-cam{position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);padding:0}

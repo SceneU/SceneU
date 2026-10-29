@@ -1077,8 +1077,7 @@
     return '<div class="notif"><div class="ic">' + ICO.x + '</div><div class="tx"><b>알림</b><span>' + esc(who) + ' 회원님을 팔로우했습니다</span></div><div class="tm">07:58</div></div>';
   }
   function lockDense() {
-    var box = L.lock && qs(L.lock, '.notifs');
-    if (box) { box.classList.toggle('dense', box.children.length > 4); }
+    lockScrollMode();
   }
   function addLockNotif(d) {
     if (!L.lock) { return; }
@@ -1092,37 +1091,55 @@
     bindLockNotifs();
     lockDense();
   }
-  /* 알림을 위로 밀면 사라져요 */
+  /* 알림을 위로(목록이 안 길 때) 또는 왼쪽으로 밀면 사라져요. 목록이 길면 세로 드래그는 스크롤이에요 */
   function swipeAway(n, onGone) {
-    var sy = 0, dy = 0, on = false, id = null;
+    var sx = 0, sy = 0, dx = 0, dy = 0, on = false, id = null, axis = '';
     n.style.touchAction = 'none';
     n.addEventListener('pointerdown', function (e) {
       e.stopPropagation();
-      sy = e.clientY; dy = 0; on = true; id = e.pointerId; n.__moved = false;
+      sx = e.clientX; sy = e.clientY; dx = 0; dy = 0; on = true; id = e.pointerId; axis = ''; n.__moved = false;
       n.style.transition = 'none';
-      try { n.setPointerCapture(id); } catch (x) {}
     });
     n.addEventListener('pointermove', function (e) {
       if (!on) { return; }
-      dy = Math.min(0, e.clientY - sy);
-      if (dy < -6) { n.__moved = true; }
-      n.style.transform = 'translate3d(0,' + dy + 'px,0)';
-      n.style.opacity = String(Math.max(0.2, 1 + dy / 140));
+      dx = Math.min(0, e.clientX - sx); dy = e.clientY - sy;
+      var adx = Math.abs(e.clientX - sx), ady = Math.abs(dy);
+      if (!axis && (adx > 8 || ady > 8)) {
+        axis = adx > ady ? 'x' : 'y';
+        if (axis === 'y' && n.style.touchAction === 'pan-y') { on = false; n.style.transition = ''; return; }
+        try { n.setPointerCapture(id); } catch (x) {}
+      }
+      if (!axis) { return; }
+      n.__moved = true;
+      if (axis === 'x') {
+        n.style.transform = 'translate3d(' + dx + 'px,0,0)'; n.style.opacity = String(Math.max(0.2, 1 + dx / 300));
+      } else {
+        dy = Math.min(0, dy);
+        n.style.transform = 'translate3d(0,' + dy + 'px,0)'; n.style.opacity = String(Math.max(0.2, 1 + dy / 140));
+      }
     });
-    function end() {
-      if (!on) { return; }
+    function end(cancel) {
+      if (!on) { n.__moved = false; return; }
       on = false;
       n.style.transition = 'transform .22s ease, opacity .22s ease';
-      if (dy < -40) {
-        n.style.transform = 'translate3d(0,-120px,0)'; n.style.opacity = '0';
+      var gone = !cancel && ((axis === 'x' && dx < -80) || (axis === 'y' && dy < -40));
+      if (gone) {
+        n.style.transform = axis === 'x' ? 'translate3d(-480px,0,0)' : 'translate3d(0,-120px,0)'; n.style.opacity = '0';
         setTimeout(function () { n.remove(); if (onGone) { onGone(); } }, 220);
       } else {
         n.style.transform = ''; n.style.opacity = '';
       }
       setTimeout(function () { n.__moved = false; }, 60);
     }
-    n.addEventListener('pointerup', end);
-    n.addEventListener('pointercancel', end);
+    n.addEventListener('pointerup', function () { end(false); });
+    n.addEventListener('pointercancel', function () { end(true); });
+  }
+  /* 알림이 많아 목록이 넘치면 세로 스크롤을 우선해요 */
+  function lockScrollMode() {
+    var box = L.lock && qs(L.lock, '.notifs');
+    if (!box) { return; }
+    var over = box.scrollHeight > box.clientHeight + 2;
+    qsa(box, '.notif').forEach(function (n) { n.style.touchAction = over ? 'pan-y' : 'none'; });
   }
   function bindLockNotifs() {
     if (!L.lock) { return; }
@@ -1131,7 +1148,7 @@
       n.__b = true;
       n.style.cursor = 'pointer';
       n.addEventListener('click', function () { if (n.__moved) { return; } pendingDm = n.getAttribute('data-id') || null; pendingKk = n.getAttribute('data-kk') || null; showPass(); });
-      swipeAway(n, lockDense);
+      swipeAway(n, lockScrollMode);
     });
   }
   var pendingDm = null;
