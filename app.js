@@ -748,7 +748,7 @@
     if (K.PHOTOS) { Object.keys(K.PHOTOS).forEach(function (k) { KKFILE[k] = K.PHOTOS[k]; }); }
     Object.keys(KKFILE).forEach(function (k) { resolve(KKFILE[k], function () {}); });
     var AVP = {};
-    try { AVP = JSON.parse(store.get('ourday.kkav') || '{}') || {}; } catch (e) { AVP = {}; }
+    AVP = {};
     function avK(size, key) {
       var ph = key && AVP[key];
       var st = size ? ' style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.37) + 'px"' : '';
@@ -863,13 +863,11 @@
       var key = isMe ? '__me' : name;
       var v = pushView(layer, sbHtml('light') +
         '<div class="kp-top"><button type="button" class="x" aria-label="닫기"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button></div>' +
-        '<div class="kp-mid"><div class="kp-avw">' + avK(104, key) + '<button type="button" class="kp-cam" aria-label="프로필 사진 변경"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l1.500-2.500h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.400"/></svg></button></div><div class="n">' + esc(name) + '</div></div>' +
-        '<div class="kp-btm">' + (isMe ? '<button type="button" class="chat" id="kpEdit"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span>프로필 사진 변경</span></button>' : '<button type="button" class="chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg><span>1:1 채팅</span></button>') + '</div>', 'kp');
+        '<div class="kp-mid"><div class="kp-avw">' + avK(104, key) + '</div><div class="n">' + esc(name) + '</div></div>' +
+        '<div class="kp-btm">' + (isMe ? '<button type="button" class="chat" id="kpEdit" style="display:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg><span>프로필 사진 변경</span></button>' : '<button type="button" class="chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.600 2 11.100c0 2.800 1.700 5.200 4.300 6.700-.2 1.300-.9 2.600-2 3.600 2.200-.1 4.100-1 5.500-2.100.7.100 1.400.2 2.200.2 5.500 0 10-3.600 10-8.100S17.500 3 12 3z"/></svg><span>1:1 채팅</span></button>') + '</div>', 'kp');
       function setPh() { qs(v, '.kp-avw .kk-av').outerHTML = avK(104, key); }
-      qs(v, '.kp-cam').addEventListener('click', function () { pickPhoto(key, setPh); });
       qs(v, '.x').addEventListener('click', function () { popView(v, function () { render(); }); });
-      if (isMe) { qs(v, '#kpEdit').addEventListener('click', function () { pickPhoto(key, setPh); }); }
-      else { qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); }); }
+      if (!isMe) { qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); }); }
     }
     function openRoom(name) {
       var room = K.ROOMS[name] || { msgs: [] };
