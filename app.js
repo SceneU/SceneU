@@ -26,8 +26,8 @@
         comments: [{ user: "jh_1107", text: "첫 번째 게시물 댓글을 여기에 적어요", time: "10주" }] },
       { img: "./ig-post-2.jpg", date: "2026-09-20", likes: 1, caption: "두 번째 게시물 멘트를 여기에 적어요",
         comments: [{ user: "jh_1107", text: "두 번째 게시물 댓글을 여기에 적어요", time: "5주" }] },
-      { img: "./ig-post-3.jpg", date: "2026-10-05", likes: 1, caption: "세 번째 게시물 멘트를 여기에 적어요",
-        comments: [{ user: "jh_1107", text: "세 번째 게시물 댓글을 여기에 적어요", time: "2주" }] }
+      { img: "./ig-post-3.jpg", date: "2026-06-18", likes: 1, caption: "세 번째 게시물 멘트를 여기에 적어요",
+        comments: [{ user: "jh_1107", text: "세 번째 게시물 댓글을 여기에 적어요", time: "18주" }] }
     ],
     stories: [
       { date: "2025-10-24", img: "./ig-story-1.jpg" },
