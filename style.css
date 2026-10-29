@@ -747,3 +747,6 @@ svg{display:block}
 .ig-xs.me .bx{flex-direction:row-reverse}
 
 .ig-sc{position:relative;width:150px;height:267px;border-radius:16px;overflow:hidden;background:#ececec;cursor:pointer}
+
+.ig-acts .hh{cursor:pointer}
+.ig-acts .hh.on svg{fill:#ff3040;stroke:#ff3040}

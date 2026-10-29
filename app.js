@@ -52,6 +52,7 @@
       ]
     }
   };
+  if (window.INSTA_CONFIG) { C.INSTA = window.INSTA_CONFIG; }
   if (!C.INSTA) { C.INSTA = IG_DEF; }
   var LIVE_DMS = [
     { id: "d11", name: "user_2048173", handle: "user_2048173", time: "08:00", followers: 0, following: 1, posts: 0, msgs: ["방금 또 올라왔어요 보셨어요?"] },
@@ -984,12 +985,24 @@
   /* =========================================================
      인스타그램 앱 (비공개 계정: 프로필 / 게시물 / 스토리 보관함 / 쪽지만 눌러져요)
      ========================================================= */
+  var igLiked = {};
   IMPL.instagram = function (layer) {
     setHB('dark');
     var G = C.INSTA || IG_DEF;
     var ME = USER.igId || 'me';
     var TODAY = new Date(2026, 9, 24);
     var tab = 'home';
+    function bindHearts(root) {
+      qsa(root, '.hh').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var i = parseInt(b.getAttribute('data-i'), 10);
+          igLiked[i] = !igLiked[i];
+          qsa(layer, '.hh[data-i="' + i + '"]').forEach(function (x) { x.classList.toggle('on', !!igLiked[i]); });
+          qsa(layer, '.ig-likes[data-i="' + i + '"]').forEach(function (x) { x.textContent = '좋아요 ' + ((G.posts[i].likes || 0) + (igLiked[i] ? 1 : 0)) + '개'; });
+          if (igLiked[i]) { likeDm(); }
+        });
+      });
+    }
     var RQ = G.requests;
     if (!RQ || !RQ.length) {
       var seed = 20261029, L = 'abcdefghijklmnopqrstuvwxyz', D = '0123456789';
@@ -1074,8 +1087,8 @@
       var cmLine = !detail && cm.length ? '<div class="ig-more" data-i="' + i + '">댓글 ' + cm.length + '개 모두 보기</div>' : '';
       return '<article class="ig-post"><div class="ig-ph-top">' + avatar(32) + '<b>' + esc(ME) + '</b><span class="sp"></span>' + ic.dots + '</div>' +
         imBox(p.img, 'sq') +
-        '<div class="ig-acts">' + ic.heart + '<span class="cm" data-i="' + i + '">' + ic.cmt + '</span>' + ic.send + '<span class="sp"></span>' + ic.mark + '</div>' +
-        '<div class="ig-likes">좋아요 ' + (p.likes || 0) + '개</div>' +
+        '<div class="ig-acts"><button type="button" class="hh' + (igLiked[i] ? ' on' : '') + '" data-i="' + i + '" aria-label="좋아요">' + ic.heart + '</button><span class="cm" data-i="' + i + '">' + ic.cmt + '</span>' + ic.send + '<span class="sp"></span>' + ic.mark + '</div>' +
+        '<div class="ig-likes" data-i="' + i + '">좋아요 ' + ((p.likes || 0) + (igLiked[i] ? 1 : 0)) + '개</div>' +
         '<div class="ig-cap"><b>' + esc(ME) + '</b> ' + esc(p.caption || '') + '</div>' + cmLine +
         '<div class="ig-date">' + esc(md(p.date)) + '</div></article>';
     }
@@ -1086,6 +1099,7 @@
         '<div class="ig-scroll"><div class="ig-stories"><div class="st"><div class="ig-me">' + avatar(66) + '<i class="plus"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 1.500v9M1.500 6h9"/></svg></i></div><span>내 스토리</span></div></div>' +
         feed + '<div style="height:90px"></div></div>' + barHtml();
       bindBar();
+      bindHearts(main);
       qs(main, '#igDm').addEventListener('click', openDmList);
       qs(main, '#igAct').addEventListener('click', openReq);
       qsa(main, '.ig-more,.ig-acts .cm').forEach(function (n) {
@@ -1120,6 +1134,7 @@
         '<div class="ig-scroll">' + postHtml(p, i, true) + '<div class="ig-cms">' + cm + '</div><div style="height:90px"></div></div>' +
         '<div class="ig-cin">' + avatar(30) + '<span>댓글 달기...</span></div>', 'igv');
       qs(v, '.back').addEventListener('click', function () { popView(v); });
+      bindHearts(v);
     }
     function openMenu() {
       var items = ['설정 및 활동', '보관', '내 활동', 'QR 코드', '저장됨', '친한 친구', '즐겨찾기'];
@@ -1499,6 +1514,25 @@
       if (dmArrived < C.DMS.length) { setTimeout(step, gap()); }
     }
     setTimeout(step, C.DM_FIRST_DELAY);
+  }
+
+  /* 인스타에서 좋아요를 처음 누르면 트위터 쪽지가 한 통 와요 */
+  var likeDmSent = false;
+  function likeDm() {
+    if (likeDmSent) { return; }
+    likeDmSent = true;
+    var cfg = (C.INSTA && C.INSTA.likeDm) || {};
+    var d = { id: 'dlike', name: cfg.name || 'jh_1107', handle: cfg.handle || 'jh_1107', time: clockHHMM(), followers: cfg.followers || 0, following: cfg.following || 1, posts: cfg.posts || 0,
+      msgs: cfg.msgs && cfg.msgs.length ? cfg.msgs : ['인스타는 하면서 트위터는 안 보네?'] };
+    setTimeout(function () {
+      C.DMS.splice(dmArrived, 0, d);
+      dmArrived++;
+      if (current === 'lock') { addLockNotif(d); } else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
+      setTimeout(function () {
+        updateBadge();
+        if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }
+      }, 700);
+    }, 2200);
   }
 
   IMPL.x = function (layer) {
