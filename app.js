@@ -985,7 +985,8 @@
     var b = el('<div class="banner"><div class="bi" style="color:#fff">' + I.xlogo(22) + '</div><div><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div></div>');
     phone.appendChild(b);
     b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
-    b.addEventListener('click', function () { b.remove(); goDm(bdm.id); });
+    b.addEventListener('click', function () { if (b.__moved) { return; } b.remove(); goDm(bdm.id); });
+    swipeAway(b);
     setTimeout(function () { b.classList.add('on'); }, 30);
     setTimeout(function () { b.classList.remove('on'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
@@ -1022,13 +1023,46 @@
     bindLockNotifs();
     lockDense();
   }
+  /* 알림을 위로 밀면 사라져요 */
+  function swipeAway(n, onGone) {
+    var sy = 0, dy = 0, on = false, id = null;
+    n.style.touchAction = 'none';
+    n.addEventListener('pointerdown', function (e) {
+      e.stopPropagation();
+      sy = e.clientY; dy = 0; on = true; id = e.pointerId; n.__moved = false;
+      n.style.transition = 'none';
+      try { n.setPointerCapture(id); } catch (x) {}
+    });
+    n.addEventListener('pointermove', function (e) {
+      if (!on) { return; }
+      dy = Math.min(0, e.clientY - sy);
+      if (dy < -6) { n.__moved = true; }
+      n.style.transform = 'translate3d(0,' + dy + 'px,0)';
+      n.style.opacity = String(Math.max(0.2, 1 + dy / 140));
+    });
+    function end() {
+      if (!on) { return; }
+      on = false;
+      n.style.transition = 'transform .22s ease, opacity .22s ease';
+      if (dy < -40) {
+        n.style.transform = 'translate3d(0,-120px,0)'; n.style.opacity = '0';
+        setTimeout(function () { n.remove(); if (onGone) { onGone(); } }, 220);
+      } else {
+        n.style.transform = ''; n.style.opacity = '';
+      }
+      setTimeout(function () { n.__moved = false; }, 60);
+    }
+    n.addEventListener('pointerup', end);
+    n.addEventListener('pointercancel', end);
+  }
   function bindLockNotifs() {
     if (!L.lock) { return; }
     qsa(L.lock, '.notif').forEach(function (n) {
       if (n.__b) { return; }
       n.__b = true;
       n.style.cursor = 'pointer';
-      n.addEventListener('click', function () { pendingDm = n.getAttribute('data-id') || null; showPass(); });
+      n.addEventListener('click', function () { if (n.__moved) { return; } pendingDm = n.getAttribute('data-id') || null; showPass(); });
+      swipeAway(n, lockDense);
     });
   }
   var pendingDm = null;

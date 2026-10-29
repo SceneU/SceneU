@@ -58,7 +58,7 @@ svg{display:block}
 .lk-time{font-size:98px;font-weight:700;line-height:1.02;letter-spacing:-3px;text-shadow:0 2px 14px rgba(0,0,0,.25)}
 .notifs{position:absolute;left:12px;right:12px;bottom:calc(var(--sab) + 190px);display:flex;flex-direction:column;gap:8px}
 .notif{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:22px;color:#111;
-  background:rgba(236,236,242,.7);-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5)}
+  background:rgba(236,236,242,.9);will-change:transform}
 .notif .ic{width:40px;height:40px;border-radius:10px;flex:none;overflow:hidden}
 .notif .ic svg{width:100%;height:100%}
 .notif .tx{flex:1;min-width:0}
@@ -319,7 +319,7 @@ svg{display:block}
 .x-bar .pf{width:30px;height:30px;border-radius:50%;background:#cfd9de;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .fab{position:absolute;right:16px;bottom:calc(var(--sab) + 86px);width:58px;height:58px;border-radius:50%;background:var(--pink);color:#fff;display:flex;align-items:center;justify-content:center;z-index:7;box-shadow:0 4px 14px rgba(249,24,128,.4)}
 .banner{position:absolute;left:10px;right:10px;top:calc(var(--top) + 4px);z-index:130;border-radius:20px;padding:12px 14px;display:flex;gap:10px;align-items:center;color:#111;
-  background:rgba(238,238,242,.92);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 8px 28px rgba(0,0,0,.25);transform:translateY(-140%);transition:transform .45s cubic-bezier(.2,.9,.2,1)}
+  background:rgba(238,238,242,.97);will-change:transform;box-shadow:0 4px 14px rgba(0,0,0,.22);transform:translateY(-140%);transition:transform .45s cubic-bezier(.2,.9,.2,1)}
 .banner.on{transform:none}
 .banner .bi{width:38px;height:38px;border-radius:9px;background:#000;display:flex;align-items:center;justify-content:center;flex:none}
 .banner b{display:block;font-size:14px}.banner span{font-size:14px;color:#333;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
@@ -596,3 +596,6 @@ svg{display:block}
 
 .me-av{background:#cfd9de;overflow:hidden}
 .me-av svg{display:block;width:100%;height:100%}
+
+.notif.grp{background:rgba(236,236,242,.9)}
+.notif{touch-action:none;-webkit-user-select:none;user-select:none}
