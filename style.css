@@ -734,3 +734,16 @@ svg{display:block}
 .ig-rq .mid span{color:#8e8e8e;font-size:13px}
 .ig-rq .ok,.ig-rq .no{height:32px;padding:0 16px;border-radius:8px;align-items:center;font-size:14px;font-weight:600}
 .ig-rq .ok{background:#0095f6;color:#fff}.ig-rq .no{background:#efefef}
+.ig-story .ig-im.full{background:#000}
+.ig-story .ig-im img{object-fit:contain}
+.ig-story .bg{touch-action:manipulation}
+.ig-arc .c{-webkit-tap-highlight-color:transparent}
+
+.ig-xs{display:flex;flex-direction:column;gap:10px;margin:6px 0}
+.ig-xs.me{align-items:flex-end;text-align:right}
+.ig-xs .lb{font-size:15.5px;color:#555;line-height:1.4;padding:0 4px}
+.ig-xs .bx{display:flex;align-items:stretch;gap:12px;padding:10px 4px 10px 8px;color:#555;font-size:15.5px}
+.ig-xs .bx i{display:block;width:4px;border-radius:2px;background:#e9e9ee;flex:none}
+.ig-xs.me .bx{flex-direction:row-reverse}
+
+.ig-sc{position:relative;width:150px;height:267px;border-radius:16px;overflow:hidden;background:#ececec;cursor:pointer}

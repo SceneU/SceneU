@@ -41,14 +41,13 @@
       user: "jh_1107",
       msgs: [
         { d: "2026-08-12", t: "22:41", from: "them", kind: "mention", text: "" },
-        { d: "2026-08-12", t: "22:43", from: "them", kind: "story", text: "스토리 답장 내용을 여기에 적어요" },
-        { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "태그한 스토리에 대한 멘트를 여기에 적어요" },
-        { d: "2026-09-02", t: "21:14", from: "me", text: "내 답장 내용을 여기에 적어요" },
-        { d: "2026-09-11", t: "19:05", from: "them", kind: "share", text: "" },
-        { d: "2026-09-20", t: "23:02", from: "them", kind: "story", text: "또 다른 스토리 답장 내용을 여기에 적어요" },
+        { d: "2026-09-02", t: "21:10", from: "them", kind: "mention", text: "" },
+        { d: "2026-09-11", t: "19:05", from: "them", kind: "mention", text: "" },
+        { d: "2026-09-20", t: "23:02", from: "them", kind: "mention", text: "" },
         { d: "2026-09-27", t: "20:15", from: "them", kind: "mention", text: "" },
-        { d: "2026-10-01", t: "18:30", from: "me", kind: "share", text: "공유한 스토리에 붙인 멘트를 여기에 적어요" },
-        { d: "2026-10-06", t: "08:30", from: "them", kind: "story", text: "마지막 스토리 답장 내용을 여기에 적어요" },
+        { d: "2026-10-01", t: "18:30", from: "me", kind: "share", story: 3, text: "" },
+        { d: "2026-10-06", t: "08:30", from: "them", text: "대화 내용을 여기에 적어요" },
+        { d: "2026-10-06", t: "08:41", from: "me", text: "내 답장을 여기에 적어요" },
         { d: "2026-10-13", t: "23:40", from: "them", kind: "mention", text: "" }
       ]
     }
@@ -1177,7 +1176,7 @@
     function openDmList() {
       var dm = G.dm || { user: 'jh_1107', msgs: [] };
       var last = dm.msgs[dm.msgs.length - 1] || {};
-      var pv = last.kind === 'mention' ? '스토리에서 회원님을 언급했어요' : (last.kind === 'share' ? '스토리를 공유했어요' : (last.kind === 'story' ? '스토리에 답장함' : (last.text || '')));
+      var pv = last.kind === 'mention' ? '스토리에 회원님을 태그했습니다' : (last.kind === 'share' ? '스토리를 공유했습니다' : (last.kind === 'story' ? '스토리에 답장했습니다' : (last.text || '')));
       var v = pushView(layer, sbHtml('dark') +
         '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">' + esc(ME) + '</b><span class="sp"></span></div>' +
         '<div class="ig-scroll"><div class="ig-dmh">메시지</div><div class="ig-dmrow" id="igRow">' + avatar(54) + '<div class="mid"><b>' + esc(dm.user) + '</b><span>' + esc(pv) + (last.d ? ' · ' + esc(agoTxt(last.d)) : '') + '</span></div></div></div>', 'igv');
@@ -1189,12 +1188,16 @@
       dm.msgs.forEach(function (m) {
         if (m.d !== prevD) { html += '<div class="ig-dd">' + esc(ymd(m.d)) + ' ' + esc(ktime(m.t)) + '</div>'; prevD = m.d; }
         var mine = m.from === 'me';
-        if (m.kind) {
-          var lab = m.kind === 'mention' ? (mine ? '회원님이 ' + esc(dm.user) + '님을 스토리에서 언급함' : esc(dm.user) + '님이 스토리에서 회원님을 언급함')
-            : (m.kind === 'share' ? (mine ? '회원님이 스토리를 공유함' : esc(dm.user) + '님이 스토리를 공유함')
-            : (mine ? esc(dm.user) + '님의 스토리에 답장함' : esc(dm.user) + '님이 내 스토리에 답장함'));
-          html += '<div class="ig-sr ' + (mine ? 'me' : 'th') + '"><div class="lb">' + lab + '</div>' +
-            '<div class="ex">스토리를 더 이상<br>이용할 수 없습니다</div>' + (m.text ? '<div class="bb">' + esc(m.text) + '</div>' : '') + '</div>';
+        if (m.kind === 'share' && m.story && G.stories && G.stories[m.story - 1]) {
+          html += '<div class="ig-xs ' + (mine ? 'me' : 'th') + '"><div class="lb">' + (mine ? '회원님이 스토리를 공유했습니다' : '누군가 스토리를 공유했습니다') + '</div>' +
+            '<div class="ig-sc" data-s="' + (m.story - 1) + '">' + imBox(G.stories[m.story - 1].img, 'fill') + '</div>' +
+            (m.text ? '<div class="ig-mm ' + (mine ? 'me' : 'th') + '"><div class="bb">' + esc(m.text) + '</div></div>' : '') + '</div>';
+        } else if (m.kind) {
+          var lab = m.kind === 'mention' ? (mine ? '회원님이 스토리에 누군가를 태그했습니다' : '누군가 스토리에 회원님을 태그했습니다')
+            : (m.kind === 'share' ? (mine ? '회원님이 스토리를 공유했습니다' : '누군가 스토리를 공유했습니다')
+            : (mine ? '회원님이 스토리에 답장했습니다' : '누군가 회원님의 스토리에 답장했습니다'));
+          html += '<div class="ig-xs ' + (mine ? 'me' : 'th') + '"><div class="lb">' + lab + '</div><div class="bx"><i></i><span>스토리를 볼 수 없습니다</span></div>' +
+            (m.text ? '<div class="ig-mm ' + (mine ? 'me' : 'th') + '"><div class="bb">' + esc(m.text) + '</div></div>' : '') + '</div>';
         } else {
           html += '<div class="ig-mm ' + (mine ? 'me' : 'th') + '">' + (mine ? '' : avatar(26)) + '<div class="bb">' + esc(m.text) + '</div></div>';
         }
@@ -1204,6 +1207,9 @@
         '<div class="ig-tb" id="igTb">' + html + '<div style="height:20px"></div></div>' +
         '<div class="ig-min"><span>메시지 보내기...</span></div>', 'igv');
       qs(v, '.back').addEventListener('click', function () { popView(v); });
+      qsa(v, '.ig-sc').forEach(function (c) {
+        c.addEventListener('click', function () { openStory(parseInt(c.getAttribute('data-s'), 10)); });
+      });
       var tb = qs(v, '#igTb');
       requestAnimationFrame(function () { tb.scrollTop = tb.scrollHeight; });
       setTimeout(function () { tb.scrollTop = tb.scrollHeight; }, 320);
