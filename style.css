@@ -750,3 +750,6 @@ svg{display:block}
 
 .ig-acts .hh{cursor:pointer}
 .ig-acts .hh.on svg{fill:#ff3040;stroke:#ff3040}
+.kr-in .fld input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;color:#111;outline:none;padding:0;-webkit-appearance:none;appearance:none}
+.kr-in .fld input::placeholder{color:#9a9a9f}
+.kr-in .snd{width:38px;height:38px;border-radius:50%;border:0;background:#fee500;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}

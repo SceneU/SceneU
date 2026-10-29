@@ -842,6 +842,93 @@
   var kkUnread = null;
   var kkGoto = null;
   var pendingKk = null;
+  /* ---- 카카오톡 대화 스크립트: 최영재 방은 정해진 문장이 자동으로 쳐지고(보내기는 직접), 그 뒤에는 직접 칠 수 있어요 ----
+     step마다: auto = 입력창을 누르면 자동으로 쳐지는 문장(비우면 직접 입력), reply = 보내면 상대가 보내는 말, then = 일정 시간 뒤 이어서 오는 말 */
+  var KK_SCRIPT = {
+    '최영재': [
+      { auto: '나 지금 일어났어', reply: ['누나 인터넷 다 봤어?'] },
+      { auto: '어 봤어 나 정환이랑 이야기 좀 해봐야겠다', reply: ['형이랑 이야기 잘 해봐'],
+        then: { wait: 5 * 60000, msgs: ['누나', '형 아침부터 엄청 혼나고 뛰어다녔어', '둘이 잘 해결했으면 좋겠어'] } },
+      { auto: '', reply: ['나는 형이랑 누나 둘 다 응원해'] },
+      { auto: '', reply: [] }
+    ]
+  };
+  var kkS = {};          /* 방 이름 -> { step, blocked } */
+  var kkUI = null;       /* 지금 열려 있는 카카오톡 화면 { layer, name, add(g), refresh(), goRoom(n) } */
+  var KK_DATE = '2026-10-24';
+  function kkState(name) {
+    if (!KK_SCRIPT[name]) { return null; }
+    if (!kkS[name]) { kkS[name] = { step: 0, blocked: false }; }
+    return kkS[name];
+  }
+  function kkUiLive() { return kkUI && kkUI.layer && kkUI.layer.isConnected ? kkUI : null; }
+  function kkPush(name, from, text) {
+    var K = C.KAKAO; if (!K || !K.ROOMS[name]) { return null; }
+    var g = { d: KK_DATE, t: clockHHMM(), from: from, text: text };
+    K.ROOMS[name].msgs.push(g);
+    return g;
+  }
+  function kkBanner(name, text) {
+    var b = el('<div class="banner"><div class="bi" style="background:none">' + ICO.kakao + '</div><div><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div></div>');
+    phone.appendChild(b);
+    b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
+    b.addEventListener('click', function () { if (b.__moved) { return; } b.remove(); goKk(name); });
+    swipeAway(b);
+    void b.offsetWidth;
+    requestAnimationFrame(function () { b.classList.add('on'); });
+    setTimeout(function () { b.classList.remove('on'); }, 3200);
+    setTimeout(function () { b.remove(); }, 3800);
+  }
+  function goKk(name) {
+    if (current === 'lock') { pendingKk = name; showPass(); return; }
+    if (current === 'app' && curApp === 'kakao' && kkUiLive()) { kkUiLive().goRoom(name); return; }
+    if (current === 'app') { closeApp(true); }
+    if (current === 'home') { kkGoto = name; openApp('kakao', null, { instant: true }); }
+  }
+  /* 상대 메시지 도착: 방이 열려 있으면 바로 붙이고, 아니면 안 읽은 표시 + 알림 */
+  function kkIncoming(name, text) {
+    var g = kkPush(name, 'them', text); if (!g) { return; }
+    var ui = kkUiLive();
+    if (ui && ui.name === name) { ui.add(g); return; }
+    var K = C.KAKAO;
+    if (kkUnread) { kkUnread[name] = (kkUnread[name] || 0) + 1; } else { K.ROOMS[name].unread = (K.ROOMS[name].unread || 0) + 1; }
+    if (ui) { ui.refresh(); }
+    if (current === 'lock' && L.lock) {
+      var box = qs(L.lock, '.notifs');
+      if (box) {
+        var old = qs(box, '.notif[data-kk="' + name + '"]'); if (old) { old.remove(); }
+        var n = el('<div class="notif pop" data-kk="' + esc(name) + '"><div class="ic">' + ICO.kakao + '</div><div class="tx"><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div><div class="tm">' + esc(g.t) + '</div></div>');
+        box.insertBefore(n, box.firstChild); bindLockNotifs(); lockDense();
+      }
+    } else if (!(ui && current === 'app' && curApp === 'kakao')) { kkBanner(name, text); }
+  }
+  function kkReplies(name, list, done) {
+    var i = 0;
+    (function next() {
+      if (i >= list.length) { if (done) { done(); } return; }
+      setTimeout(function () { kkIncoming(name, list[i]); i++; next(); }, i === 0 ? 1800 : 1100);
+    })();
+  }
+  /* 내가 한 마디를 보냈을 때 스크립트 진행 */
+  function kkAfterSend(name) {
+    var st = kkState(name); if (!st) { return; }
+    var stp = KK_SCRIPT[name][st.step];
+    if (st.step < KK_SCRIPT[name].length - 1) { st.step++; }
+    if (!stp || !stp.reply || !stp.reply.length) { return; }
+    st.blocked = true;
+    var ui0 = kkUiLive(); if (ui0 && ui0.name === name) { ui0.field(); }
+    kkReplies(name, stp.reply, function () {
+      if (stp.then) {
+        setTimeout(function () {
+          kkReplies(name, stp.then.msgs, function () {
+            st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); }
+          });
+        }, stp.then.wait);
+      } else {
+        st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); }
+      }
+    });
+  }
   IMPL.kakao = function (layer) {
     setHB('dark');
     var K = C.KAKAO || { FRIENDS: [], ROOMS: {} };
@@ -993,34 +1080,94 @@
       qs(v, '.x').addEventListener('click', function () { popView(v, function () { render(); }); });
       if (!isMe) { qs(v, '.chat').addEventListener('click', function () { v.remove(); openRoom(name); }); }
     }
+    function rowHtml(g, prev, nx, name) {
+      var html = '';
+      if (!prev || g.d !== prev.d) { html += '<div class="kr-date"><span>' + longDate(g.d) + '</span></div>'; }
+      var first = !prev || g.d !== prev.d || g.from !== prev.from;
+      var showTime = !nx || nx.from !== g.from || nx.t !== g.t || nx.d !== g.d;
+      var tm = showTime ? '<span class="ktm">' + ktime(g.t) + '</span>' : '';
+      if (g.from === 'me') {
+        html += '<div class="kr-msg me' + (first ? ' first' : '') + '" data-t="' + g.t + '">' + tm + '<div class="kb">' + kt(g.text) + '</div></div>';
+      } else {
+        html += '<div class="kr-msg them' + (first ? ' first' : '') + '" data-t="' + g.t + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
+          '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + kt(g.text) + '</div>' + tm + '</div></div></div>';
+      }
+      return html;
+    }
+    var SEND_IC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 11.500l6-6 6 6"/></svg>';
     function openRoom(name) {
       var room = K.ROOMS[name] || { msgs: [] };
-      kkUnread[name] = 0;
-      var html = '', prevD = '', prevFrom = '', msgs = room.msgs;
-      msgs.forEach(function (g, i) {
-        var nx = msgs[i + 1];
-        if (g.d !== prevD) { html += '<div class="kr-date"><span>' + longDate(g.d) + '</span></div>'; prevFrom = ''; }
-        var first = g.from !== prevFrom;
-        var showTime = !nx || nx.from !== g.from || nx.t !== g.t || nx.d !== g.d;
-        var tm = showTime ? '<span class="ktm">' + ktime(g.t) + '</span>' : '';
-        if (g.from === 'me') {
-          html += '<div class="kr-msg me' + (first ? ' first' : '') + '">' + tm + '<div class="kb">' + kt(g.text) + '</div></div>';
-        } else {
-          html += '<div class="kr-msg them' + (first ? ' first' : '') + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
-            '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + kt(g.text) + '</div>' + tm + '</div></div></div>';
-        }
-        prevD = g.d; prevFrom = g.from;
-      });
+      kkUnread[name] = 0; if (room.unread) { room.unread = 0; }
+      var html = '', msgs = room.msgs;
+      msgs.forEach(function (g, i) { html += rowHtml(g, msgs[i - 1], msgs[i + 1], name); });
       var v = pushView(layer, sbHtml('dark') +
         '<div class="kr-top"><button type="button" class="back">' + I.back + '</button><b>' + esc(name) + '</b><div class="ics">' + kic.search + kic.menu + '</div></div>' +
         '<div class="kr-body" id="krb">' + html + '<div style="height:12px"></div></div>' +
-        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><span>메시지 입력</span>' + kic.emo + '</div><span class="hs">' + kic.hash + '</span></div>', 'kr');
+        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><input type="text" id="krI" placeholder="메시지 입력" autocomplete="off" autocapitalize="off" enterkeyhint="send">' + kic.emo + '</div><span class="hs" id="krH">' + kic.hash + '</span></div>', 'kr');
       v.style.background = '#b2c7da';
       var body = qs(v, '#krb');
       requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
       setTimeout(function () { body.scrollTop = body.scrollHeight; }, 320);
-      qs(v, '.back').addEventListener('click', function () { popView(v, function () { render(); }); });
+      var inp = qs(v, '#krI'), hs = qs(v, '#krH'), typing = false, typeTimer = null;
+      var st = kkState(name);
+      function scroll() { body.scrollTop = body.scrollHeight; }
+      function addMsg(g) {
+        var prev = room.msgs[room.msgs.length - 2];
+        if (prev && prev.from === g.from && prev.d === g.d && prev.t === g.t) {
+          var rows = qsa(body, '.kr-msg'), lr = rows[rows.length - 1];
+          if (lr) { var o = qs(lr, '.ktm'); if (o) { o.remove(); } }
+        }
+        var sp = qs(body, 'div[style*="height:12px"]');
+        var h = rowHtml(g, prev, null, name);
+        if (sp) { sp.insertAdjacentHTML('beforebegin', h); } else { body.insertAdjacentHTML('beforeend', h); }
+        scroll();
+      }
+      function syncSend() {
+        var has = inp.value.length > 0 && !typing;
+        hs.innerHTML = has ? '<button type="button" class="snd" aria-label="전송">' + SEND_IC + '</button>' : kic.hash;
+        var bt = qs(hs, '.snd'); if (bt) { bt.addEventListener('click', doSend); }
+      }
+      function doSend() {
+        var text = String(inp.value || '').replace(/^\s+|\s+$/g, '');
+        if (!text || typing) { return; }
+        var g = kkPush(name, 'me', text); inp.value = '';
+        addMsg(g); syncSend(); inp.blur();
+        kkAfterSend(name);
+      }
+      /* 입력창 상태: 막힘 / 자동 입력(누르면 쳐짐) / 직접 입력 */
+      function field() {
+        var stp = st ? KK_SCRIPT[name][st.step] : null;
+        var locked = st && st.blocked;
+        var auto = st && !locked && stp && stp.auto;
+        var free = st ? (!locked && !auto) : false;
+        inp.readOnly = !free; inp.setAttribute('inputmode', free ? 'text' : 'none');
+        inp.placeholder = '메시지 입력';
+        if (!typing && !free) { inp.value = ''; }
+        syncSend();
+      }
+      if (st) {
+        inp.addEventListener('focus', function () {
+          var stp = KK_SCRIPT[name][st.step];
+          if (st.blocked || typing || !stp || !stp.auto || inp.value) { return; }
+          inp.blur();
+          var txt = stp.auto, i = 0; typing = true; syncSend();
+          typeTimer = setInterval(function () {
+            i++; inp.value = txt.slice(0, i); syncSend();
+            if (i >= txt.length) { clearInterval(typeTimer); typing = false; syncSend(); }
+          }, 110);
+        });
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
+        inp.addEventListener('input', syncSend);
+        qs(v, '.fld').addEventListener('click', function () { if (!st.blocked) { inp.focus(); } });
+        field();
+      } else {
+        inp.readOnly = true; inp.setAttribute('inputmode', 'none');
+        qs(v, '.fld').addEventListener('click', function () { /* 이 방은 아직 직접 칠 수 없어요 */ });
+      }
+      kkUI = { layer: layer, name: name, add: addMsg, refresh: function () {}, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
+      qs(v, '.back').addEventListener('click', function () { clearInterval(typeTimer); kkUI.name = null; popView(v, function () { render(); }); });
     }
+    kkUI = { layer: layer, name: null, add: function () {}, refresh: function () { if (!qs(layer, '.kr')) { render(); } }, field: function () {}, goRoom: function (n) { openRoom(n); } };
     render();
     if (kkGoto) { var g0 = kkGoto; kkGoto = null; tab = 'chats'; render(); openRoom(g0); }
   };
