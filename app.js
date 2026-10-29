@@ -403,10 +403,12 @@
     if (current !== 'lock') { return; }
     passOn = true; passBuf = ''; renderDots();
     qs(L.lock, '#pass').classList.add('on');
+    L.lock.classList.add('passing');
   }
   function hidePass() {
     passOn = false; passBuf = ''; renderDots();
     qs(L.lock, '#pass').classList.remove('on');
+    L.lock.classList.remove('passing');
   }
   function renderDots() {
     if (!L.lock) { return; }
@@ -770,8 +772,8 @@
     };
     /* 깃허브에 올린 사진 파일: kk-me(나), kk-jeonghwan … 이름으로 올리면 자동으로 보여요. config의 KAKAO.PHOTOS로 바꿀 수도 있어요 */
     var KKFILE = {
-      '__me': 'kk-me.jpg', '신정환': 'kk-jeonghwan.jpg', '최영재': 'kk-yeongjae.jpg', '이경민': 'kk-gyeongmin.jpg',
-      '한지훈': 'kk-jihun.jpg', '김도훈': 'kk-dohun.jpg', '한진': 'kk-hanjin.jpg', '류인아': 'kk-ina.jpg', '엄마': 'kk-mom.jpg', '아빠': 'kk-dad.jpg'
+      '신정환': 'kk-jeonghwan.jpg', '최영재': 'kk-yeongjae.jpg', '이경민': 'kk-gyeongmin.jpg',
+      '한지훈': 'kk-jihun.jpg', '김도훈': 'kk-dohun.jpg', '한진': 'kk-hanjin.jpg'
     };
     if (K.PHOTOS) { Object.keys(K.PHOTOS).forEach(function (k) { KKFILE[k] = K.PHOTOS[k]; }); }
     Object.keys(KKFILE).forEach(function (k) { resolve(KKFILE[k], function () {}); });

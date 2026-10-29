@@ -614,3 +614,9 @@ svg{display:block}
 .bg-lock:not(.fbk),.bg-home:not(.fbk){background:#16161c}
 .bgph{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity .28s ease}
 .bgph.on{opacity:1}
+
+/* 비밀번호 입력 중에는 뒤의 시계·알림이 겹쳐 보이지 않게 숨겨요(깜빡임·렉 방지) */
+.lock .lk-top,.lock .notifs,.lock .lk-hint,.lock .lk-btn{transition:opacity .2s}
+.lock.passing .lk-top,.lock.passing .notifs,.lock.passing .lk-hint,.lock.passing .lk-btn{opacity:0;pointer-events:none}
+.pass{background:rgba(18,18,28,.78)}
+.notifs{contain:layout style}
