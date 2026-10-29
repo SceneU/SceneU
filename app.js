@@ -9,9 +9,43 @@
   if (!C) {
     var errBox = document.getElementById('phone');
     if (errBox) {
-      errBox.innerHTML = '<div style="position:absolute;inset:0;background:#111;color:#fff;padding:90px 26px;font:16px/1.7 -apple-system,sans-serif">' +
-        '<b style="font-size:20px">config.js 를 읽지 못했어요</b><br><br>config.js 안에 쉼표( , ), 괄호( { } [ ] ), 따옴표( &quot; ) 가 빠졌거나 남아 있을 가능성이 커요.<br><br>' +
-        '최근에 config.js 에 붙여넣은 부분의 앞뒤를 확인해 주세요. 특히 <b>] },</b> 가 두 번 남아 있지 않은지 봐주세요.</div>';
+      errBox.innerHTML = '<div style="position:absolute;inset:0;background:#111;color:#fff;padding:70px 20px;font:15px/1.6 -apple-system,sans-serif;overflow:auto">' +
+        '<b style="font-size:20px">config.js 를 읽지 못했어요</b><br><br>config.js 안에 쉼표( , ), 괄호( { } [ ] ), 따옴표( &quot; ) 가 빠졌거나 남아 있어요.<div id="cfgWhy" style="margin-top:14px;color:#ffd479">어디가 문제인지 찾는 중…</div></div>';
+      var why = document.getElementById('cfgWhy');
+      var escH = function (t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+      try {
+        fetch('./config.js', { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (txt) {
+          var lines = txt.split('\n'), keys = [];
+          lines.forEach(function (ln, i) { if (/^  [A-Za-z_][A-Za-z0-9_]*\s*:/.test(ln)) { keys.push(i); } });
+          var bad = [];
+          keys.forEach(function (st, k) {
+            var en = k + 1 < keys.length ? keys[k + 1] : lines.length;
+            var seg = lines.slice(st, en);
+            while (seg.length && /^\s*(\};?|\)\;?)?\s*$/.test(seg[seg.length - 1]) && k + 1 === keys.length) { seg.pop(); }
+            var code = seg.join('\n');
+            try { new Function('return {' + code + (k + 1 < keys.length ? '\nzz__:1' : '') + '\n}'); }
+            catch (e) { bad.push({ name: lines[st].trim().split(':')[0], from: st + 1, to: st + seg.length, msg: e.message, seg: seg, st: st }); }
+          });
+          if (!bad.length) { why.innerHTML = '항목별로는 문제를 못 찾았어요. 파일 맨 위(<b>window.CONFIG = {</b>)나 맨 아래(<b>};</b>)를 확인해 주세요.<br>오류: ' + escH((window.__cfgErr || {}).msg || ''); return; }
+          var o = '문제가 있는 항목: <b>' + escH(bad[0].name) + '</b> (config.js ' + bad[0].from + '~' + bad[0].to + '번 줄)<br>오류: ' + escH(bad[0].msg) + '<br><br>';
+          var sl = bad[0].seg, base0 = bad[0].st;
+          var its = [];
+          sl.forEach(function (ln, i) { if (/^\s{4}[\{\[]/.test(ln)) { its.push(i); } });
+          var hit = [];
+          its.forEach(function (a0, k) {
+            var b0 = k + 1 < its.length ? its[k + 1] : sl.length;
+            var ch = sl.slice(a0, b0).join('\n').replace(/[\s,]*$/, '');
+            var chk = /^\s*\/\//.test(ch) ? '' : ch;
+            try { new Function('return [' + ch.replace(/\/\/[^\n]*$/, '') + '\n]'); } catch (e) { hit.push([a0, b0]); }
+          });
+          if (hit.length) { var h0 = hit[0]; base0 += h0[0]; sl = sl.slice(h0[0], h0[1] + 1); o += '정확히 이 부분이 이상해요 (' + (base0 + 1) + '번 줄부터):<br>'; }
+          o += '<div style="font:11px/1.5 Menlo,monospace;color:#ccc;white-space:pre;overflow:auto;background:#1c1c1c;padding:8px;border-radius:8px">';
+          sl.slice(0, 60).forEach(function (ln, i) { o += (base0 + i + 1) + '  ' + escH(ln.length > 90 ? ln.slice(0, 90) + '…' : ln) + '\n'; });
+          o += '</div>';
+          if (bad.length > 1) { o += '<br>그 밖에 의심되는 항목: ' + bad.slice(1).map(function (x) { return escH(x.name) + '(' + x.from + '줄)'; }).join(', '); }
+          why.innerHTML = o;
+        })['catch'](function () { why.textContent = '파일을 다시 읽지 못했어요.'; });
+      } catch (e) { why.textContent = ''; }
     }
     return;
   }
@@ -52,6 +86,15 @@
       ]
     }
   };
+  /* index.html 이 예전 것이어도 insta.js 를 직접 읽어와요 */
+  if (!window.INSTA_CONFIG) {
+    try {
+      var xi = new XMLHttpRequest();
+      xi.open('GET', './insta.js?t=' + Date.now(), false);
+      xi.send();
+      if (xi.status === 200 || (xi.status === 0 && xi.responseText)) { (new Function(xi.responseText))(); }
+    } catch (e) {}
+  }
   if (window.INSTA_CONFIG) { C.INSTA = window.INSTA_CONFIG; }
   if (!C.INSTA) { C.INSTA = IG_DEF; }
   var LIVE_DMS = [
@@ -989,6 +1032,8 @@
   IMPL.instagram = function (layer) {
     setHB('dark');
     var G = C.INSTA || IG_DEF;
+    /* 게시물은 날짜가 최신인 것이 맨 앞(피드 위 / 프로필 왼쪽 위)이에요 */
+    G = (function (g) { var o = {}; for (var k in g) { o[k] = g[k]; } o.posts = (g.posts || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); }); return o; })(G);
     var ME = USER.igId || 'me';
     var TODAY = new Date(2026, 9, 24);
     var tab = 'home';
