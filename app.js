@@ -150,13 +150,15 @@
     del: function (k) { delete mem[k]; try { localStorage.removeItem(k); } catch (e) {} }
   };
 
-  var USER = { name: '', igId: '' };
+  var USER = { last: '', first: '', name: '', igId: '' };
+  function fullName() { return (USER.last || '') + (USER.first || USER.name || ''); }
+  function saveUser() { USER.name = USER.first; try { store.set('ourday.user', JSON.stringify(USER)); } catch (e) {} }
   function loadUser() {
     var raw = store.get('ourday.user');
     if (!raw) { return false; }
     try {
       var u = JSON.parse(raw);
-      if (u && u.name && u.igId) { USER = u; return true; }
+      if (u && (u.first || u.name) && u.igId) { USER = { last: u.last || '', first: u.first || u.name, name: u.first || u.name, igId: u.igId }; return true; }
     } catch (e) {}
     return false;
   }
@@ -233,7 +235,7 @@
       var c = String(USER.name || '').charCodeAt(String(USER.name || '').length - 1);
       var jong = c >= 0xAC00 && c <= 0xD7A3 && ((c - 0xAC00) % 28) !== 0;
       return USER.name + (jong ? '아' : '야');
-    }).replace(/\{NAME\}/g, USER.name);
+    }).replace(/\{FULL\}/g, fullName()).replace(/\{LAST\}/g, USER.last || '').replace(/\{NAME\}/g, USER.name);
   }
   var ICO = {};
   ICO.kakao = '<svg viewBox="0 0 60 60"><rect width="60" height="60" fill="#FEE500"/><path d="M30 14C20.600 14 13 20 13 27.400c0 4.700 3.100 8.800 7.800 11.200l-1.800 6.600c-.1.500.4.800.8.500l7.800-5.100c.8.100 1.600.1 2.400.1 9.400 0 17-6 17-13.300S39.400 14 30 14z" fill="#3a1d1d"/></svg>';
@@ -390,7 +392,7 @@
     qs(o, 'button').addEventListener('click', function () { o.remove(); });
     phone.appendChild(o);
   }
-  function soon() { alertBox('준비 중'); }
+  function soon() { /* 준비 중인 곳은 눌러도 아무 변화 없음 */ }
 
   /* 홈 바 */
   var hb = el('<div id="hb"></div>');
@@ -425,7 +427,8 @@
     setHB('off');
     var s = el('<section class="layer start fade-in"><div class="card">' +
       '<p class="sub">시작하기 전에 알려주세요</p>' +
-      '<label>이름<input id="inName" maxlength="10" autocomplete="off" placeholder="이름"></label>' +
+      '<div class="row2"><label>성<input id="inLast" maxlength="4" autocomplete="off" placeholder="성"></label>' +
+      '<label>이름<input id="inName" maxlength="8" autocomplete="off" placeholder="이름"></label></div>' +
       '<label>인스타그램 아이디<div class="at"><span>@</span><input id="inIg" maxlength="30" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="instagram_id"></div></label>' +
       '<p class="note">※ 본인 또는 가상의 아이디만 입력해주세요.</p>' +
       '<button class="go" id="goBtn" type="button" disabled>시작</button></div></section>');
@@ -439,18 +442,19 @@
         s.style.backgroundPosition = 'center';
       });
     })();
-    var inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
+    var inLast = qs(s, '#inLast'), inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
     function clean() {
       inIg.value = inIg.value.replace(/^@+/, '').replace(/[^A-Za-z0-9_.]/g, '');
-      go.disabled = !(inName.value.trim().length >= 1 && /^[A-Za-z0-9_.]{1,30}$/.test(inIg.value));
+      go.disabled = !(inLast.value.trim().length >= 1 && inName.value.trim().length >= 1 && /^[A-Za-z0-9_.]{1,30}$/.test(inIg.value));
     }
     inName.addEventListener('input', clean);
+    inLast.addEventListener('input', clean);
     inIg.addEventListener('input', clean);
     go.addEventListener('click', function () {
       clean();
       if (go.disabled) { return; }
-      USER = { name: inName.value.trim().slice(0, 10), igId: inIg.value.slice(0, 30) };
-      store.set('ourday.user', JSON.stringify(USER));
+      USER = { last: inLast.value.trim().slice(0, 4), first: inName.value.trim().slice(0, 8), name: '', igId: inIg.value.slice(0, 30) };
+      saveUser();
       showLock();
     });
     L.start = s;
@@ -653,6 +657,81 @@
   /* =========================================================
      전화 앱
      ========================================================= */
+
+  /* =========================================================
+     설정 (아이폰 설정 모양)
+     ========================================================= */
+  IMPL.settings = function (layer) {
+    setHB('dark');
+    function sq(color, inner) {
+      return '<span class="st-ic" style="background:' + color + '"><svg viewBox="0 0 24 24" fill="#fff">' + inner + '</svg></span>';
+    }
+    var G1 = [
+      ['비행기 모드', '#ff9f0a', '<path d="M21 16v-2l-8-5V3.500a1.500 1.500 0 00-3 0V9l-8 5v2l8-2.500V19l-2 1.500V22l3.500-1 3.500 1v-1.500L13 19v-5.500z"/>', 'toggle'],
+      ['Wi-Fi', '#0a84ff', '<path d="M12 18.500a1.700 1.700 0 110 3.400 1.700 1.700 0 010-3.400zM12 13c2 0 3.800.8 5.100 2.100l-1.500 1.500A5.400 5.400 0 0012 15.100c-1.500 0-2.800.6-3.600 1.500l-1.500-1.500A7.500 7.500 0 0112 13zm0-5c3.300 0 6.200 1.300 8.300 3.500l-1.500 1.500A9.800 9.800 0 0012 10.100c-2.800 0-5.200 1.100-6.800 2.900L3.700 11.500A12.600 12.600 0 0112 8z"/>', 'SK_WiFi'],
+      ['Bluetooth', '#0a84ff', '<path d="M11 3l6 5-4 3.500L17 15l-6 6v-7l-3.500 3-1-1.200L10 12.500 6.500 8.200l1-1.200L11 10z"/>', '켬'],
+      ['셀룰러', '#30d158', '<path d="M3 17h3v4H3zm5-5h3v9H8zm5-5h3v14h-3zm5-4h3v18h-3z"/>', '']
+    ];
+    var G2 = [
+      ['알림', '#ff3b30', '<path d="M12 2a6 6 0 00-6 6v4l-2 3v1h16v-1l-2-3V8a6 6 0 00-6-6zm-2 17a2 2 0 004 0z"/>'],
+      ['사운드 및 햅틱', '#ff2d55', '<path d="M4 9v6h4l5 4V5L8 9zm12 .5a4 4 0 010 5l-1.200-1.200a2.300 2.300 0 000-2.600z"/>'],
+      ['집중 모드', '#5e5ce6', '<path d="M20 14.500A8.500 8.500 0 019.500 4 8.500 8.500 0 1020 14.500z"/>'],
+      ['스크린 타임', '#5e5ce6', '<path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.500l4 2.300-.8 1.400L11 13V7z"/>']
+    ];
+    var G3 = [
+      ['일반', '#8e8e93', '<circle cx="12" cy="12" r="4"/><path d="M11 2h2l.5 3 2 .8 2.500-1.800 1.400 1.400-1.800 2.500.8 2 3 .5v2l-3 .5-.8 2 1.800 2.500-1.400 1.400-2.500-1.800-2 .8-.5 3h-2l-.5-3-2-.8-2.500 1.800-1.400-1.400L6.500 15l-.8-2-3-.5v-2l3-.5.8-2L4.700 5.500l1.400-1.400L8.600 5.900l2-.8z" opacity=".55"/>'],
+      ['제어 센터', '#8e8e93', '<rect x="3" y="5" width="18" height="5" rx="2.500"/><rect x="3" y="14" width="18" height="5" rx="2.500"/>'],
+      ['디스플레이 및 밝기', '#0a84ff', '<circle cx="12" cy="12" r="4.500"/><path d="M11 1h2v3h-2zm0 19h2v3h-2zM1 11h3v2H1zm19 0h3v2h-3zM4.200 5.600l1.400-1.400 2.100 2.100-1.400 1.400zm12.100 12.100l1.400-1.400 2.100 2.100-1.400 1.400zM5.600 19.800l-1.400-1.400 2.100-2.100 1.400 1.400zM17.700 7.700l-1.400-1.400 2.100-2.100 1.400 1.400z"/>'],
+      ['배경화면', '#32ade6', '<path d="M3 5h18v14H3zm2 2v7.500l4-4 3 3 3-4 4 5V7z"/>']
+    ];
+    function grp(list) {
+      return '<div class="st-grp">' + list.map(function (r) {
+        var val = r[3] === 'toggle' ? '<span class="st-tg"><i></i></span>' : (r[3] ? '<span class="st-val">' + esc(r[3] === 'SK_WiFi' ? '연결 안 됨' : r[3]) + '</span>' : '');
+        return '<div class="st-row">' + sq(r[1], r[2]) + '<span class="st-tx">' + esc(r[0]) + '</span>' + val + '<span class="st-chev">' + '<svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="#c4c4c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></span></div>';
+      }).join('') + '</div>';
+    }
+    layer.innerHTML = '<div class="st-app">' + sbHtml('dark') +
+      '<div class="st-sc"><h1 class="st-h">설정</h1>' +
+      '<div class="st-search">' + I.search + '<span>검색</span></div>' +
+      '<div class="st-grp st-me"><div class="st-av" id="stAv"></div><div class="st-mt"><b id="stNm"></b><span>Apple ID, iCloud+, 미디어 및 구입 항목</span></div></div>' +
+      '<div class="st-cap">내 정보</div>' +
+      '<div class="st-grp">' +
+        '<label class="st-row st-in"><span class="st-tx">성</span><input id="stLast" maxlength="4" autocomplete="off"></label>' +
+        '<label class="st-row st-in"><span class="st-tx">이름</span><input id="stFirst" maxlength="8" autocomplete="off"></label>' +
+        '<label class="st-row st-in"><span class="st-tx">인스타그램</span><input id="stIg" maxlength="30" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>' +
+      '</div><div class="st-foot">바꾸면 바로 저장돼요.</div>' +
+      grp(G1) + grp(G2) + grp(G3) +
+      '<div class="st-grp"><button type="button" class="st-row st-reset" id="stReset">처음부터 다시 하기</button></div>' +
+      '<div style="height:40px"></div></div></div>';
+    var iL = qs(layer, '#stLast'), iF = qs(layer, '#stFirst'), iI = qs(layer, '#stIg');
+    iL.value = USER.last || ''; iF.value = USER.first || USER.name || ''; iI.value = USER.igId || '';
+    function paint() {
+      qs(layer, '#stNm').textContent = fullName();
+      qs(layer, '#stAv').textContent = (USER.first || USER.name || '').charAt(0);
+    }
+    paint();
+    iL.addEventListener('input', function () { USER.last = iL.value.trim(); saveUser(); paint(); });
+    iF.addEventListener('input', function () { if (iF.value.trim()) { USER.first = iF.value.trim(); saveUser(); paint(); } });
+    iF.addEventListener('blur', function () { iF.value = USER.first; });
+    iI.addEventListener('input', function () {
+      iI.value = iI.value.replace(/^@+/, '').replace(/[^A-Za-z0-9_.]/g, '');
+      if (iI.value) { USER.igId = iI.value; saveUser(); }
+    });
+    iI.addEventListener('blur', function () { iI.value = USER.igId; });
+    qs(layer, '#stReset').addEventListener('click', function () {
+      var o = el('<div class="st-ov"><div class="st-sheet"><div class="st-st"><b>처음부터 다시 할까요?</b><span>지금까지의 진행 상황이 모두 초기화돼요. 이름과 인스타그램 아이디는 그대로 남아요.</span></div>' +
+        '<button type="button" class="st-ok" id="stOk">처음부터 다시 하기</button><button type="button" class="st-no" id="stNo">취소</button></div></div>');
+      phone.appendChild(o);
+      requestAnimationFrame(function () { o.classList.add('on'); });
+      qs(o, '#stNo').addEventListener('click', function () { o.classList.remove('on'); setTimeout(function () { o.remove(); }, 220); });
+      qs(o, '#stOk').addEventListener('click', function () {
+        ['ourday.dm', 'ourday.dmRead', 'ourday.sms', 'ourday.smsOrder', 'ourday.kkav', 'ourday.res'].forEach(function (k) { store.del(k); });
+        location.reload();
+      });
+    });
+    return null;
+  };
+
   IMPL.phone = function (layer) {
     setHB('dark');
     var mode = 'all';
@@ -857,6 +936,12 @@
   /* ---- 카카오톡 대화 스크립트: 최영재 방은 정해진 문장이 자동으로 쳐지고(보내기는 직접), 그 뒤에는 직접 칠 수 있어요 ----
      step마다: auto = 입력창을 누르면 자동으로 쳐지는 문장(비우면 직접 입력), reply = 보내면 상대가 보내는 말, then = 일정 시간 뒤 이어서 오는 말 */
   var KK_SCRIPT = {
+    '류인아': [
+      { auto: '나 이제 일어남', reply: ['야 너 ㄱㅊ음..?'] },
+      { auto: '아 모르겠다 ㅈ됨', reply: ['신정환이랑 이야기 해봄?', '뭐래?'] },
+      { auto: 'ㅇㅇ.. 지금 이야기 중 해보고 올게', reply: [] },
+      { done: true }
+    ],
     '최영재': [
       { auto: '나 지금 일어났어', reply: ['누나 인터넷 다 봤어?'] },
       { auto: '어 봤어 나 정환이랑 이야기 좀 해봐야겠다', reply: ['형이랑 이야기 잘 해봐'],
@@ -933,6 +1018,17 @@
     var p = (x.match(new RegExp(KK_POS.source, 'g')) || []).length;
     return n <= p;
   }
+  /* "너 진짜 나랑 이렇게 끝낼 거야?"에 대한 답: 끝내는 데 동조하면 false(이별), 반대하거나 애정 표현이면 true(재회) */
+  function kkKeep(t) {
+    var x = String(t || '').replace(/\s+/g, '');
+    if (/보고싶지(않|안)|안보고싶|사랑(안|하지않)|좋아하지않|정떨어|질렸/.test(x)) { return false; }
+    if (/(끝내|헤어지|그만두|그만하|이별하)\S*(기)?(싫|않|안)|끝낼수없|끝(내|나)지(말|마)|안끝|못끝|못헤어/.test(x)) { return true; }
+    if (/보고싶|사랑|좋아해|미안|고마|다시|사귀|돌아와|가지마|잡고싶|곁에/.test(x)) { return true; }
+    if (/끝내자|끝낼|끝이야|끝났|끝내|헤어지자|헤어져|헤어지|그만하자|이별/.test(x)) { return false; }
+    if (/^(응|웅|ㅇㅇ|ㅇ|그래|맞아|어|ㅇㅋ|알았|네|넹|그렇지|당연)/.test(x)) { return false; }
+    if (/아니|아냐|ㄴㄴ|싫|노노|못/.test(x)) { return true; }
+    return true;
+  }
   /* 음성 재생(없으면 6초 뒤 끊겨요). 끝나면 onEnd */
   function kkVoice(base, onEnd) {
     var exts = ['.mp3', '.m4a', '.wav', '.aac', '.ogg'], i = 0, a = null, ended = false, fb = null;
@@ -981,10 +1077,22 @@
   function kkCall(o) {
     var photo = './kk-jeonghwan.jpg';
     var hs = I.handset;
-    var ov = el('<div class="kcall"><div class="kc-bg"></div>' +
-      '<div class="kc-top"><div class="kc-av"><i>' + I.person + '</i><img data-rm="1" src="' + esc(rs(photo)) + '" data-orig="' + esc(photo) + '" alt="" decoding="async" draggable="false"></div>' +
-      '<div class="kc-name">' + esc(o.name || '신정환') + '</div><div class="kc-sub">휴대전화</div></div>' +
+    var nm = o.name || '신정환';
+    function ci(path) { return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
+    var ICN = {
+      mute: ci('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M4 4l16 16"/>'),
+      keypad: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="4" r="1.800"/><circle cx="12" cy="4" r="1.800"/><circle cx="19" cy="4" r="1.800"/><circle cx="5" cy="10" r="1.800"/><circle cx="12" cy="10" r="1.800"/><circle cx="19" cy="10" r="1.800"/><circle cx="5" cy="16" r="1.800"/><circle cx="12" cy="16" r="1.800"/><circle cx="19" cy="16" r="1.800"/><circle cx="12" cy="22" r="1.800"/></svg>',
+      speaker: ci('<path d="M4 9.500v5h4l5 4v-13l-5 4zM16 9a4 4 0 010 6M18.500 6.500a8 8 0 010 11"/>'),
+      add: ci('<path d="M12 5v14M5 12h14"/>'),
+      ft: ci('<rect x="3" y="7" width="12" height="10" rx="2.500"/><path d="M15 11l6-3.500v9L15 13"/>'),
+      contacts: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8.500" r="4"/><path d="M4 20c0-4.500 3.500-7 8-7s8 2.500 8 7z"/></svg>',
+      bell: ci('<path d="M6 16V11a6 6 0 0112 0v5l1.500 2h-15zM10 21a2 2 0 004 0"/>'),
+      msg: ci('<path d="M4 5h16v11H9l-5 4z"/>')
+    };
+    var ov = el('<div class="kcall"><div class="kc-bg"><img data-rm="1" src="' + esc(rs(photo)) + '" data-orig="' + esc(photo) + '" alt="" decoding="async" draggable="false"></div><div class="kc-shade"></div>' +
+      '<div class="kc-top"><div class="kc-name">' + esc(nm) + '</div><div class="kc-sub">휴대전화</div></div>' +
       '<div class="kc-grid"></div>' +
+      '<div class="kc-quick"><div class="kq"><i>' + ICN.bell + '</i><span>나중에 알림</span></div><div class="kq"><i>' + ICN.msg + '</i><span>메시지</span></div></div>' +
       '<div class="kc-btm"><div class="kc-btn dec" id="kcDec"><i>' + hs + '</i><span>거절</span></div><div class="kc-btn acc" id="kcAcc"><i>' + hs + '</i><span>수락</span></div></div></div>');
     phone.appendChild(ov);
     requestAnimationFrame(function () { ov.classList.add('on'); });
@@ -1005,7 +1113,8 @@
       stopRing();
       var sub = qs(ov, '.kc-sub'), g = qs(ov, '.kc-grid');
       ov.classList.add('conn');
-      g.innerHTML = ['소리 끔', '키패드', '스피커', '통화 추가', 'FaceTime', '연락처'].map(function (t) { return '<div class="kb2"><i></i><span>' + t + '</span></div>'; }).join('');
+      var items = [['소리 끔', ICN.mute], ['키패드', ICN.keypad], ['스피커', ICN.speaker], ['통화 추가', ICN.add], ['FaceTime', ICN.ft], ['연락처', ICN.contacts]];
+      g.innerHTML = items.map(function (t) { return '<div class="kb2"><i>' + t[1] + '</i><span>' + t[0] + '</span></div>'; }).join('');
       qs(ov, '.kc-btm').innerHTML = '<div class="kc-btn dec end" id="kcEnd"><i>' + hs + '</i></div>';
       sub.textContent = '0:00';
       timer = setInterval(function () { sec++; sub.textContent = Math.floor(sec / 60) + ':' + (sec % 60 < 10 ? '0' : '') + (sec % 60); }, 1000);
@@ -1055,7 +1164,7 @@
     /* 4 */ { auto: '회사에서는 뭐래?', reply: ['회사에서도 나도 너 의견이 가장 중요해', '넌 어떻게 하고 싶어'] },
     /* 5 */ { auto: '우리 이미 끝났는데 뭘 어떻게 하겠어' },
     /* 6 */ { auto: '괜히 나 때문에 미안해', reply: ['너 진짜 나랑 이렇게 끝낼 거야?'] },
-    /* 7 */ { go: function (t) { return kkPos(t) ? { reply: ['내가 마음 고생 시켜서 미안해', '내가 앞으로 더 잘할게', '다시 받아줘서 고마워'], next: 8 } : JHF.toBreakup; } },
+    /* 7 */ { go: function (t) { return kkKeep(t) ? { reply: ['보고싶어', '내가 마음 고생 시켜서 미안해', '내가 앞으로 더 잘할게', '다시 받아줘서 고마워'], next: 8 } : JHF.toBreakup; } },
     /* 8 */ { go: function (t) { return kkPos(t) ? { reply: ['미친소리인 거 아는데', '공개연애할래?', '이미 이렇게 된 거', '좀 그렇겠지 너'], next: 9 } : JHF.toBreakup; } },
     /* 9 */ { go: function () { return { reply: [], next: 11, after: function () { setTimeout(JHF.finalCall, 900); } }; } },
     /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup'); }, 2400); } }; } },
@@ -1125,7 +1234,7 @@
     var r = stp.go ? stp.go(text) : stp;
     st.step = (r.next !== undefined) ? r.next : Math.min(st.step + 1, script.length - 1);
     var reply = r.reply || [];
-    if (!reply.length && !r.after && !r.then) { return; }
+    if (!reply.length && !r.after && !r.then) { var nx = script[st.step]; return !!(nx && nx.auto); }
     st.blocked = true;
     var ui0 = kkUiLive(); if (ui0 && ui0.name === name) { ui0.field(); }
     function unblock() { st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); } }
@@ -1135,6 +1244,7 @@
       else { unblock(); }
     }
     if (reply.length) { kkReplies(name, reply, afterReplies); } else { afterReplies(); }
+    return false;
   }
   IMPL.kakao = function (layer) {
     setHB('dark');
@@ -1244,14 +1354,14 @@
       }).join('');
       main.innerHTML = sbHtml('dark') +
         '<div class="kk-head"><h1>친구</h1><div class="ics">' + kic.search + kic.add + kic.music + kic.gear + '</div></div>' +
-        '<div class="kk-list"><div class="kk-row me" data-me="1">' + avK(54, '__me') + '<div class="nm"><b>' + esc(USER.name) + '</b></div></div>' +
+        '<div class="kk-list"><div class="kk-row me" data-me="1">' + avK(54, '__me') + '<div class="nm"><b>' + esc(fullName()) + '</b></div></div>' +
         '<div class="kk-sec">친구 ' + K.FRIENDS.length + '<span>' + '﹀' + '</span></div>' + rows + '<div style="height:20px"></div></div>' + barHtml();
       bindBar();
       qsa(main, '.kk-row[data-f]').forEach(function (r) {
         r.addEventListener('click', function () { openProfile(r.getAttribute('data-f')); });
       });
       var meRow = qs(main, '.kk-row.me');
-      if (meRow) { meRow.addEventListener('click', function () { openProfile(USER.name, true); }); }
+      if (meRow) { meRow.addEventListener('click', function () { openProfile(fullName(), true); }); }
     }
     function chatRooms() {
       var list = [];
@@ -1317,7 +1427,7 @@
       var body = qs(v, '#krb');
       requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
       setTimeout(function () { body.scrollTop = body.scrollHeight; }, 320);
-      var inp = qs(v, '#krI'), hs = qs(v, '#krH'), typing = false, typeTimer = null;
+      var inp = qs(v, '#krI'), hs = qs(v, '#krH'), typing = false, typeTimer = null, startAuto = null;
       var st = kkState(name);
       function scroll() { body.scrollTop = body.scrollHeight; }
       function kbShow() { v.classList.add('kbup'); setTimeout(scroll, 120); setTimeout(scroll, 400); }
@@ -1336,9 +1446,9 @@
       }
       function autosize() {
         inp.style.height = '0px';
-        var h = Math.min(inp.scrollHeight, 112);
+        var h = Math.max(38, Math.min(inp.scrollHeight, 112));
         inp.style.height = h + 'px';
-        v.style.setProperty('--kx', Math.max(0, h - 22) + 'px');
+        v.style.setProperty('--kx', Math.max(0, h - 38) + 'px');
         inp.scrollTop = inp.scrollHeight;
         scroll();
       }
@@ -1352,13 +1462,14 @@
         var text = String(inp.value || '').replace(/^\s+|\s+$/g, '');
         if (!text || typing) { return; }
         var g = kkPush(name, 'me', text); inp.value = '';
-        addMsg(g); syncSend(); inp.blur(); kbHide();
-        kkAfterSend(name, text);
+        addMsg(g); syncSend(); inp.blur();
+        var chain = kkAfterSend(name, text);
+        if (chain && startAuto) { setTimeout(startAuto, 700); } else { kbHide(); }
       }
       /* 입력창 상태: 막힘 / 자동 입력(누르면 쳐짐) / 직접 입력 */
       function field() {
         var stp = st ? KK_SCRIPT[name][st.step] : null;
-        var locked = st && st.blocked;
+        var locked = st && (st.blocked || (stp && stp.done));
         var auto = st && !locked && stp && stp.auto;
         var free = st ? (!locked && !auto) : false;
         inp.readOnly = !free; inp.setAttribute('inputmode', free ? 'text' : 'none');
@@ -1367,9 +1478,9 @@
         syncSend();
       }
       if (st) {
-        inp.addEventListener('focus', function () {
+        startAuto = function () {
           var stp = KK_SCRIPT[name][st.step];
-          if (st.blocked || typing || !stp || !stp.auto || inp.value) { return; }
+          if (st.blocked || typing || !stp || !stp.auto || inp.value || !v.isConnected) { return; }
           inp.blur();
           var steps = hgSteps(stp.auto), i = 0; typing = true; syncSend();
           kbShow();
@@ -1388,13 +1499,14 @@
             typeTimer = setTimeout(nextKey, (s0.keys[0] === ' ' ? 150 : 95) + Math.random() * 90);
           }
           typeTimer = setTimeout(nextKey, 520);
-        });
+        };
+        inp.addEventListener('focus', function () { startAuto(); });
         inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
         inp.addEventListener('input', syncSend);
         qs(v, '.fld').addEventListener('click', function () { if (!st.blocked) { inp.focus(); } });
         field();
       } else {
-        inp.readOnly = true; inp.setAttribute('inputmode', 'none');
+        inp.readOnly = true; inp.setAttribute('inputmode', 'none'); autosize();
         qs(v, '.fld').addEventListener('click', function () { /* 이 방은 아직 직접 칠 수 없어요 */ });
       }
       kkUI = { layer: layer, name: name, add: addMsg, refresh: listRefresh, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
@@ -1521,7 +1633,7 @@
         '<div class="ig-top"><span class="un">' + ic.lockI + '<b>' + esc(ME) + '</b>' + ic.chevD + '</span><span class="sp"></span><span class="inert">' + ic.plusSq + '</span><button type="button" id="igMenu" aria-label="메뉴">' + ic.menu + '</button></div>' +
         '<div class="ig-scroll"><div class="ig-prof"><div class="row">' + avatar(86) +
         '<div class="stats"><div><b>' + G.posts.length + '</b><span>게시물</span></div><div><b>0</b><span>팔로워</span></div><div><b>0</b><span>팔로잉</span></div></div></div>' +
-        '<div class="nm">' + esc(USER.name || '') + '</div>' + (G.bio ? '<div class="bio">' + esc(G.bio).replace(/\n/g, '<br>') + '</div>' : '') +
+        '<div class="nm">' + esc(fullName()) + '</div>' + (G.bio ? '<div class="bio">' + esc(G.bio).replace(/\n/g, '<br>') + '</div>' : '') +
         '<div class="btns"><span class="inert">프로필 편집</span><span class="inert">프로필 공유</span></div></div>' +
         '<div class="ig-tabs"><span class="on">' + ic.grid + '</span><span>' + ic.reelsG + '</span><span>' + ic.tag + '</span></div>' +
         '<div class="ig-grid">' + cells + '</div><div style="height:90px"></div></div>' + barHtml();
@@ -1744,9 +1856,11 @@
   var dmRead = {};
 
   function rich(s) {
-    return String(s).split(/(\{IG\}|\{NAME\})/).map(function (p) {
+    return String(s).split(/(\{IG\}|\{NAME\}|\{FULL\}|\{LAST\})/).map(function (p) {
       if (p === '{IG}') { return '<span class="mention">@' + esc(USER.igId) + '</span>'; }
       if (p === '{NAME}') { return esc(USER.name); }
+      if (p === '{FULL}') { return esc(fullName()); }
+      if (p === '{LAST}') { return esc(USER.last || ''); }
       return esc(p);
     }).join('');
   }
@@ -1936,6 +2050,9 @@
     setTimeout(step, C.DM_FIRST_DELAY);
   }
 
+  /* 인스타 아이콘은 그라데이션 id가 겹치면 홈 화면이 가려진 동안 비어 보여서, 쓸 때마다 새 id를 줘요 */
+  var igIconN = 0;
+  function igIcon() { igIconN++; return ICO.instagram.replace(/igG/g, 'igG' + igIconN); }
   /* 인스타 팔로우 요청 아이디(알계처럼 무작위로 만들고, 같은 아이디가 계속 쓰이게 한 번만 만들어요) */
   var IG_RQ = null;
   function igReqIds() {
@@ -1970,12 +2087,12 @@
       var box = qs(L.lock, '.notifs');
       if (box) {
         var old = qs(box, '.notif[data-ig]'); if (old) { old.remove(); }
-        var n = el('<div class="notif pop" data-ig="1"><div class="ic">' + ICO.instagram + '</div><div class="tx"><b>Instagram</b><span>' + esc(text) + '</span></div><div class="tm">방금</div></div>');
+        var n = el('<div class="notif pop" data-ig="1"><div class="ic">' + igIcon() + '</div><div class="tx"><b>Instagram</b><span>' + esc(text) + '</span></div><div class="tm">방금</div></div>');
         box.insertBefore(n, box.firstChild); bindLockNotifs(); lockDense();
       }
       return;
     }
-    var b = el('<div class="banner"><div class="bi" style="background:none">' + ICO.instagram + '</div><div><b>Instagram</b><span>' + esc(text) + '</span></div></div>');
+    var b = el('<div class="banner"><div class="bi" style="background:none">' + igIcon() + '</div><div><b>Instagram</b><span>' + esc(text) + '</span></div></div>');
     phone.appendChild(b);
     b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
     b.addEventListener('click', function () {
