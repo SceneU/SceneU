@@ -1075,31 +1075,29 @@
   }
   /* 전화 화면: 수락/거절 → 통화 화면 + 음성 → 음성이 끝나면 자동으로 끊겨요 */
   function kkCall(o) {
-    var photo = './kk-jeonghwan.jpg';
     var hs = I.handset;
     var nm = o.name || '신정환';
     function ci(path) { return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>'; }
     var ICN = {
-      mute: ci('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M4 4l16 16"/>'),
-      keypad: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="4" r="1.800"/><circle cx="12" cy="4" r="1.800"/><circle cx="19" cy="4" r="1.800"/><circle cx="5" cy="10" r="1.800"/><circle cx="12" cy="10" r="1.800"/><circle cx="19" cy="10" r="1.800"/><circle cx="5" cy="16" r="1.800"/><circle cx="12" cy="16" r="1.800"/><circle cx="19" cy="16" r="1.800"/><circle cx="12" cy="22" r="1.800"/></svg>',
-      speaker: ci('<path d="M4 9.500v5h4l5 4v-13l-5 4zM16 9a4 4 0 010 6M18.500 6.500a8 8 0 010 11"/>'),
-      add: ci('<path d="M12 5v14M5 12h14"/>'),
-      ft: ci('<rect x="3" y="7" width="12" height="10" rx="2.500"/><path d="M15 11l6-3.500v9L15 13"/>'),
-      contacts: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="8.500" r="4"/><path d="M4 20c0-4.500 3.500-7 8-7s8 2.500 8 7z"/></svg>',
-      bell: ci('<path d="M6 16V11a6 6 0 0112 0v5l1.500 2h-15zM10 21a2 2 0 004 0"/>'),
-      msg: ci('<path d="M4 5h16v11H9l-5 4z"/>')
+      speaker: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M3 9.500v5h4l5 4.500v-14l-5 4.500zM15 8.500a5 5 0 010 7l-1.200-1.200a3.300 3.300 0 000-4.600zM17.500 6a8.500 8.500 0 010 12l-1.200-1.200a6.800 6.800 0 000-9.600z"/></svg>',
+      ft: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M3 8.500A2.500 2.500 0 015.500 6h8A2.500 2.500 0 0116 8.500v7a2.500 2.500 0 01-2.500 2.500h-8A2.500 2.500 0 013 15.500zM17.500 10.500L22 7.500v9l-4.500-3z"/></svg>',
+      mute: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none"/><path d="M5.500 11a6.500 6.500 0 0013 0M12 17.500V21M4 4l16 16"/></svg>',
+      more: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="2.200"/><circle cx="12" cy="12" r="2.200"/><circle cx="19" cy="12" r="2.200"/></svg>',
+      keypad: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="4" r="1.900"/><circle cx="12" cy="4" r="1.900"/><circle cx="19" cy="4" r="1.900"/><circle cx="5" cy="10" r="1.900"/><circle cx="12" cy="10" r="1.900"/><circle cx="19" cy="10" r="1.900"/><circle cx="5" cy="16" r="1.900"/><circle cx="12" cy="16" r="1.900"/><circle cx="19" cy="16" r="1.900"/><circle cx="12" cy="22" r="1.900"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3a8.500 8.500 0 100 17 8.500 8.500 0 000-17zm0 2a6.500 6.500 0 110 13 6.500 6.500 0 010-13zm-.8 2.500v5l3.600 2.100.8-1.400-2.900-1.700V7.500z"/><path d="M4 4.500L7.500 2 8.700 3.600 5.200 6zM20 4.500L16.500 2l-1.200 1.600L18.800 6z"/></svg>',
+      msg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.500 3 2 6.500 2 10.800c0 2.400 1.300 4.500 3.400 5.900-.2 1.300-.8 2.600-1.800 3.600 2.200-.2 3.900-1 5.100-2 .9.200 2.200.4 3.300.4 5.500 0 10-3.500 10-7.900S17.500 3 12 3z"/></svg>'
     };
-    var ov = el('<div class="kcall"><div class="kc-bg"><img data-rm="1" src="' + esc(rs(photo)) + '" data-orig="' + esc(photo) + '" alt="" decoding="async" draggable="false"></div><div class="kc-shade"></div>' +
-      '<div class="kc-top"><div class="kc-name">' + esc(nm) + '</div><div class="kc-sub">휴대전화</div></div>' +
+    var ov = el('<div class="kcall"><div class="kc-bg"></div>' +
+      '<div class="kc-top"><div class="kc-sub">휴대전화</div><div class="kc-name">' + esc(nm) + '</div><div class="kc-ph">휴대전화</div></div>' +
       '<div class="kc-grid"></div>' +
-      '<div class="kc-quick"><div class="kq"><i>' + ICN.bell + '</i><span>나중에 알림</span></div><div class="kq"><i>' + ICN.msg + '</i><span>메시지</span></div></div>' +
-      '<div class="kc-btm"><div class="kc-btn dec" id="kcDec"><i>' + hs + '</i><span>거절</span></div><div class="kc-btn acc" id="kcAcc"><i>' + hs + '</i><span>수락</span></div></div></div>');
+      '<div class="kc-quick"><div class="kq"><i>' + ICN.clock + '</i><span>나중에 보기</span></div><div class="kq"><i>' + ICN.msg + '</i><span>메시지</span></div></div>' +
+      '<div class="kc-btm"><div class="kc-btn dec" id="kcDec"><i>' + hs + '</i><span>거절</span></div><div class="kc-btn acc" id="kcAcc"><i>' + hs + '</i><span>승인</span></div></div></div>');
     phone.appendChild(ov);
     requestAnimationFrame(function () { ov.classList.add('on'); });
     var stopRing = kkRing(), voice = null, timer = null, sec = 0, closed = false;
     function close(cb) {
       if (closed) { return; } closed = true;
-      clearInterval(timer); stopRing();
+      clearInterval(timer); clearTimeout(ov.__t); stopRing();
       if (voice) { voice.stop(); }
       qs(ov, '.kc-sub').textContent = '통화 종료';
       setTimeout(function () { ov.classList.remove('on'); setTimeout(function () { ov.remove(); if (cb) { cb(); } }, 280); }, 700);
@@ -1113,20 +1111,32 @@
       stopRing();
       var sub = qs(ov, '.kc-sub'), g = qs(ov, '.kc-grid');
       ov.classList.add('conn');
-      var items = [['소리 끔', ICN.mute], ['키패드', ICN.keypad], ['스피커', ICN.speaker], ['통화 추가', ICN.add], ['FaceTime', ICN.ft], ['연락처', ICN.contacts]];
-      g.innerHTML = items.map(function (t) { return '<div class="kb2"><i>' + t[1] + '</i><span>' + t[0] + '</span></div>'; }).join('');
-      qs(ov, '.kc-btm').innerHTML = '<div class="kc-btn dec end" id="kcEnd"><i>' + hs + '</i></div>';
-      sub.textContent = '0:00';
-      timer = setInterval(function () { sec++; sub.textContent = Math.floor(sec / 60) + ':' + (sec % 60 < 10 ? '0' : '') + (sec % 60); }, 1000);
+      var items = [['스피커', ICN.speaker], ['FaceTime', ICN.ft], ['소리 끔', ICN.mute], ['더 보기', ICN.more], ['종료', null], ['키패드', ICN.keypad]];
+      g.innerHTML = items.map(function (t) {
+        if (!t[1]) { return '<div class="kb2 end" id="kcEnd"><i>' + hs + '</i><span>종료</span></div>'; }
+        return '<div class="kb2"><i>' + t[1] + '</i><span>' + t[0] + '</span></div>';
+      }).join('');
+      var bt = qs(ov, '.kc-btm'); if (bt) { bt.remove(); }
+      var qk = qs(ov, '.kc-quick'); if (qk) { qk.remove(); }
+      sub.textContent = '연결 중...';
+      ov.__t = setTimeout(function () {
+        sub.textContent = '0:00';
+        timer = setInterval(function () { sec++; sub.textContent = Math.floor(sec / 60) + ':' + (sec % 60 < 10 ? '0' : '') + (sec % 60); }, 1000);
+      }, 900);
       voice = kkVoice(o.voice, function () { close(function () { if (o.onEnd) { o.onEnd(); } }); });
       qs(ov, '#kcEnd').addEventListener('click', function () { close(function () { if (o.onEnd) { o.onEnd(); } }); });
     });
     return ov;
   }
-  function kkEnding(kind) {
+  function kkEnding(kind, num) {
     var good = kind === 'reunion';
-    var ov = el('<div class="kend ' + (good ? 'good' : 'bad') + '"><div class="ke-in"><div class="ke-t">' + (good ? '재회엔딩💕💕' : '이별엔딩💔') + '</div><button type="button" class="ke-b">처음부터 다시</button></div></div>');
+    var ov = el('<div class="kend start ' + (good ? 'good' : 'bad') + '"><div class="ke-in"><div class="ke-n">' + num + '번 엔딩</div><div class="ke-t">' + (good ? '재회엔딩💕💕' : '이별엔딩💔') + '</div><button type="button" class="ke-b">처음부터 다시</button></div></div>');
     phone.appendChild(ov);
+    resolve((C.IMG && C.IMG.startBg) || './start-bg.jpg', function (v) {
+      if (!v) { return; }
+      ov.style.backgroundImage = 'url("' + v + '")';
+      ov.style.backgroundSize = 'cover'; ov.style.backgroundRepeat = 'no-repeat'; ov.style.backgroundPosition = 'center';
+    });
     requestAnimationFrame(function () { ov.classList.add('on'); });
     qs(ov, '.ke-b').addEventListener('click', function () { location.reload(); });
   }
@@ -1139,7 +1149,7 @@
       function third() {
         kkCall({ name: JH, voice: KK_VOICE.first, onEnd: ok,
           onDecline: function () {
-            kkReplies(JH, ['나랑 이제 이야기도 하기 싫은가보네', '알았어', '전화해서 미안', '너한테 피해 안 가게 내가 알아서 해결할게', '잘 지내'], function () { setTimeout(function () { kkEnding('breakup'); }, 2200); });
+            kkReplies(JH, ['나랑 이제 이야기도 하기 싫은가보네', '알았어', '전화해서 미안', '너한테 피해 안 가게 내가 알아서 해결할게', '잘 지내'], function () { setTimeout(function () { kkEnding('breakup', 3); }, 2200); });
           } });
       }
       function second() {
@@ -1151,7 +1161,7 @@
     /* 재회 쪽 마지막 전화: 받을 때까지 다시 와요 */
     finalCall: function () {
       (function ring() {
-        kkCall({ name: JH, voice: KK_VOICE.final, onEnd: function () { kkEnding('reunion'); }, onDecline: function () { setTimeout(ring, 3000); } });
+        kkCall({ name: JH, voice: KK_VOICE.final, onEnd: function () { kkEnding('reunion', 1); }, onDecline: function () { setTimeout(ring, 3000); } });
       })();
     },
     toBreakup: { reply: ['너 진짜 끝까지 너만 생각하네', '난 진짜 너 위해서'], next: 10 }
@@ -1167,7 +1177,7 @@
     /* 7 */ { go: function (t) { return kkKeep(t) ? { reply: ['보고싶어', '내가 마음 고생 시켜서 미안해', '내가 앞으로 더 잘할게', '다시 받아줘서 고마워'], next: 8 } : JHF.toBreakup; } },
     /* 8 */ { go: function (t) { return kkPos(t) ? { reply: ['미친소리인 거 아는데', '공개연애할래?', '이미 이렇게 된 거', '좀 그렇겠지 너'], next: 9 } : JHF.toBreakup; } },
     /* 9 */ { go: function () { return { reply: [], next: 11, after: function () { setTimeout(JHF.finalCall, 900); } }; } },
-    /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup'); }, 2400); } }; } },
+    /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup', 2); }, 2400); } }; } },
     /* 11 */ { done: true }
   ];
   var kkS = {};          /* 방 이름 -> { step, blocked } */
@@ -1187,7 +1197,11 @@
   }
   function kkBanner(name, text) {
     qsa(phone, '.banner').forEach(function (o) { if (o.__kk) { o.remove(); } });
-    var b = el('<div class="banner"><div class="bi" style="background:none">' + ICO.kakao + '</div><div><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div></div>');
+    var KP = { '신정환': 'kk-jeonghwan.jpg', '최영재': 'kk-yeongjae.jpg', '이경민': 'kk-gyeongmin.jpg', '한지훈': 'kk-jihun.jpg', '김도훈': 'kk-dohun.jpg', '한진': 'kk-hanjin.jpg' };
+    try { if (C.KAKAO && C.KAKAO.PHOTOS) { Object.keys(C.KAKAO.PHOTOS).forEach(function (k) { KP[k] = C.KAKAO.PHOTOS[k]; }); } } catch (e) {}
+    var pf = KP[name];
+    var av = '<div class="bav"><i>' + I.person + '</i>' + (pf ? '<img data-rm="1" src="' + esc(rs(pf)) + '" data-orig="' + esc(pf) + '" alt="" decoding="async" draggable="false">' : '') + '<em>' + ICO.kakao + '</em></div>';
+    var b = el('<div class="banner"><div class="bi" style="background:none">' + av + '</div><div><b>' + esc(name) + '</b><span>' + esc(fillName(text)) + '</span></div></div>');
     b.__kk = true; phone.appendChild(b);
     b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
     b.addEventListener('click', function () { if (b.__moved) { return; } b.remove(); goKk(name); });
@@ -1476,6 +1490,8 @@
         inp.placeholder = '메시지 입력';
         if (!typing && !free) { inp.value = ''; }
         syncSend();
+        if (locked && document.activeElement === inp) { inp.blur(); }
+        if (auto && st.want && startAuto) { st.want = false; setTimeout(startAuto, 250); }
       }
       if (st) {
         startAuto = function () {
@@ -1496,14 +1512,15 @@
             if (!typing) { return; }
             if (i >= steps.length) { typing = false; syncSend(); return; }
             var s0 = steps[i++]; inp.value = s0.v; press(s0.keys); syncSend();
-            typeTimer = setTimeout(nextKey, (s0.keys[0] === ' ' ? 150 : 95) + Math.random() * 90);
+            typeTimer = setTimeout(nextKey, (s0.keys[0] === ' ' ? 70 : 42) + Math.random() * 38);
           }
-          typeTimer = setTimeout(nextKey, 520);
+          typeTimer = setTimeout(nextKey, 320);
         };
-        inp.addEventListener('focus', function () { startAuto(); });
+        inp.addEventListener('focus', function () { if (st.blocked) { st.want = true; inp.blur(); return; } startAuto(); });
+        inp.addEventListener('click', function () { if (st.blocked) { st.want = true; } else { startAuto(); } });
         inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSend(); } });
         inp.addEventListener('input', syncSend);
-        qs(v, '.fld').addEventListener('click', function () { if (!st.blocked) { inp.focus(); } });
+        qs(v, '.fld').addEventListener('click', function () { if (st.blocked) { st.want = true; } else { startAuto(); } });
         field();
       } else {
         inp.readOnly = true; inp.setAttribute('inputmode', 'none'); autosize();
