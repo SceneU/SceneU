@@ -1216,7 +1216,7 @@
     swipeAway(b);
     void b.offsetWidth;
     requestAnimationFrame(function () { b.classList.add('on'); });
-    setTimeout(function () { b.classList.remove('on'); }, 3200);
+    setTimeout(function () { b.classList.add('out'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
   function goKk(name) {
@@ -1932,7 +1932,7 @@
     swipeAway(b);
     void b.offsetWidth;
     requestAnimationFrame(function () { b.classList.add('on'); });
-    setTimeout(function () { b.classList.remove('on'); }, 3200);
+    setTimeout(function () { b.classList.add('out'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
   function dmNotifHtml(d) {
@@ -2133,7 +2133,7 @@
     swipeAway(b);
     void b.offsetWidth;
     requestAnimationFrame(function () { b.classList.add('on'); });
-    setTimeout(function () { b.classList.remove('on'); }, 3200);
+    setTimeout(function () { b.classList.add('out'); }, 3200);
     setTimeout(function () { b.remove(); }, 3800);
   }
 
@@ -2142,13 +2142,28 @@
   function likeDm() {
     if (likeDmSent) { return; }
     likeDmSent = true;
+    /* 이미 쪽지가 와 있던 알계 계정에서, 같은 대화창에 새 쪽지가 이어서 와요 */
+    var FROM = 'user48201937';
     var cfg = (C.INSTA && C.INSTA.likeDm) || {};
-    var d = { id: 'dlike', name: cfg.name || 'jh_1107', handle: cfg.handle || 'jh_1107', time: clockHHMM(), followers: cfg.followers || 0, following: cfg.following || 1, posts: cfg.posts || 0,
-      msgs: cfg.msgs && cfg.msgs.length ? cfg.msgs : ['인스타는 하면서 트위터는 안 보네?'] };
+    var text = (cfg.msgs && cfg.msgs[0]) || '인스타는 하면서 트위터는 안 보네?';
     setTimeout(function () {
+      var idx = -1;
+      for (var i = 0; i < C.DMS.length; i++) { if (C.DMS[i].handle === FROM) { idx = i; break; } }
+      var d;
+      if (idx >= 0) {
+        d = C.DMS.splice(idx, 1)[0];
+        if (idx < DM_PRE) { DM_PRE--; }
+        if (idx < dmArrived) { dmArrived--; }
+        d.msgs = d.msgs.concat([text]);
+        d.time = clockHHMM();
+        delete dmRead[d.id];
+      } else {
+        d = { id: 'dlike', name: FROM, handle: FROM, time: clockHHMM(), followers: 0, following: 2, posts: 0, msgs: [text] };
+      }
       C.DMS.splice(dmArrived, 0, d);
       dmArrived++;
-      if (current === 'lock') { addLockNotif(d); } else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(d); }
+      var shown = { id: d.id, name: d.name, handle: d.handle, time: d.time, msgs: [text] };
+      if (current === 'lock') { addLockNotif(shown); } else if (!(xCtx && xCtx.tab === 'dm')) { bannerShow(shown); }
       setTimeout(function () {
         updateBadge();
         if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }

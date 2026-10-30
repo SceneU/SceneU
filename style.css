@@ -892,3 +892,9 @@ svg{display:block}
 .igi svg{display:block;width:100%;height:100%}
 .banner .bi .igi{width:38px;height:38px;border-radius:9px;overflow:hidden}
 .notif .ic .igi{border-radius:10px}
+
+/* 알림 배너: 올라갈 때는 transition 대신 keyframe 애니메이션(아이폰에서 더 부드러움) */
+.banner{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.banner.out{animation:bannerOut .32s cubic-bezier(.4,0,.9,.6) forwards;pointer-events:none}
+@keyframes bannerOut{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,-135%,0);opacity:0}}
+.banner .bav i{overflow:visible}
