@@ -1058,6 +1058,12 @@
     if (/아니|아냐|ㄴㄴ|싫|노노|못/.test(x)) { return true; }
     return true;
   }
+  /* "난 진짜 너 위해서" 뒤의 답: 사과만 하면 false(버전 2), 사과 말고 더 부정적인 말이 나오면 true(버전 4) */
+  function kkHarsh(t) {
+    var x = String(t || '').replace(/\s+/g, '');
+    x = x.replace(/(끝내|헤어지|그만두|그만하|이별하)\S*(기)?(싫|않)\S*/g, '좋아').replace(/미안\S*/g, '');
+    return KK_NEG.test(x) || /ㅅㅂ|씨발|시발|짜증|화나|이해(가|도)?안|지치|질려|이기적|어이없|ㅈㄹ|지랄|뭔데|왜이래|너만생각|죄책감|가식|거짓|변명|웃기/.test(x);
+  }
   /* 음성 재생(없으면 6초 뒤 끊겨요). 끝나면 onEnd */
   function kkVoice(base, onEnd) {
     var exts = ['.mp3', '.m4a', '.wav', '.aac', '.ogg'], i = 0, a = null, ended = false, fb = null;
@@ -1206,8 +1212,29 @@
     /* 7 */ { go: function (t) { return kkKeep(t) ? { reply: ['보고싶어', '내가 마음고생 시켜서 미안해', '내가 진짜 잘할테니까', '나 다시 받아주면 안될까?'], next: 8 } : JHF.toBreakup; } },
     /* 8 */ { go: function (t) { return kkAccept(t) ? { reply: ['미친소리인 거 아는데', '공개연애할래?', '이미 이렇게 된 거', '좀 그렇겠지 너'], next: 9 } : JHF.toBreakup; } },
     /* 9 */ { go: function () { return { reply: [], next: 11, after: function () { setTimeout(JHF.finalCall, 900); } }; } },
-    /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup', 2); }, 2400); } }; } },
-    /* 11 */ { done: true }
+    /* 10 */ { go: function (t) { if (kkHarsh(t)) { return { reply: ['너 진짜 나랑 이렇게 끝내겠다고'], next: 12 }; } return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup', 2); }, 2400); } }; } },
+    /* 11 */ { done: true },
+    /* ---- 버전 4: 사과 말고 더 부정적인 말이 나왔을 때 (답장은 모두 자동 입력) ---- */
+    /* 12 */ { auto: '어', reply: ['넌 3년이 쉽냐', '그렇게 좀 떨어져 있었다고 너 혼자 마음 정리하면 끝이야?'] },
+    /* 13 */ { auto: '넌 이게 쉬워 보여?', reply: ['어 쉬워 보여 아무렇지도 않아 보여', '난 너한테 진짜 뭐였냐?'] },
+    /* 14 */ { auto: '말 그딴식으로 하지 마' },
+    /* 15 */ { auto: '넌 너가 나한테 상처 준 건 생각 안 하고 니가 상처받은 거만 생각하지', reply: ['너 내가 생각 정리하고 연락하라고 했지', '너 한 통이라도 했어?'] },
+    /* 16 */ { auto: '헤어졌잖아' },
+    /* 17 */ { auto: '내가 뭘 더 해?' },
+    /* 18 */ { auto: '야 정환아 나야 말로 묻자' },
+    /* 19 */ { auto: '너 나한테 못 오는 동안 내 생각을 하기는 했어?', reply: ['했잖아 그래서 너 밥 못 챙겨 먹을까 봐 내가 못 가는 게 미안해서 연락했잖아'] },
+    /* 20 */ { auto: '어 했지 근데 그거 알아?' },
+    /* 21 */ { auto: '너 그거 네 죄책감 덜려고 그러는 거였어', reply: ['그럼 일 때문인데 다 버리고 가 그럼?', '그럼 니 마음이 편해?'] },
+    /* 22 */ { auto: '안 편해 나도' },
+    /* 23 */ { auto: '너 그때 나 봤다던 날' },
+    /* 24 */ { auto: '아 됐어 지금 이런 이야기해서 뭐해', reply: ['뭐', '그날 뭐'] },
+    /* 25 */ { auto: '아 됐다고 그만 이야기하자고', reply: ['말하라고'] },
+    /* 26 */ { auto: '정환아' },
+    /* 27 */ { auto: '나 너 미워하기 싫어' },
+    /* 28 */ { auto: '그만해', reply: ['난 헤어지기 싫다고', '왜 헤어져야 하는지 이해도 안 가'] },
+    /* 29 */ { auto: '그럼 너는 평생 이해 못 하고 살아' },
+    /* 30 */ { auto: '우린 진짜 끝내는 게 맞겠다', reply: ['야', 'ㅇㅇㅇ'], next: 31, after: function () { setTimeout(function () { kkEnding('breakup', 4); }, 2400); } },
+    /* 31 */ { done: true }
   ];
   var kkS = {};          /* 방 이름 -> { step, blocked } */
   var kkUI = null;       /* 지금 열려 있는 카카오톡 화면 { layer, name, add(g), refresh(), goRoom(n) } */
