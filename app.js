@@ -1238,7 +1238,7 @@
     /* 27 */ { auto: '나 너 미워하기 싫어' },
     /* 28 */ { auto: '그만해', reply: ['난 헤어지기 싫다고', '왜 헤어져야 하는지 이해도 안 가'] },
     /* 29 */ { auto: '그럼 너는 평생 이해 못 하고 살아' },
-    /* 30 */ { auto: '우린 진짜 끝내는 게 맞겠다', reply: ['야', 'ㅇㅇㅇ'], next: 31, after: function () { setTimeout(function () { kkEnding('breakup', 4); }, 2400); } },
+    /* 30 */ { auto: '우린 진짜 끝내는 게 맞겠다', reply: ['야', '{FULL}'], next: 31, after: function () { setTimeout(function () { kkEnding('breakup', 4); }, 2400); } },
     /* 31 */ { done: true }
   ];
   var kkS = {};          /* 방 이름 -> { step, blocked } */
