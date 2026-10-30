@@ -1060,9 +1060,12 @@
   }
   /* "난 진짜 너 위해서" 뒤의 답: 사과만 하면 false(버전 2), 사과 말고 더 부정적인 말이 나오면 true(버전 4) */
   function kkHarsh(t) {
-    var x = String(t || '').replace(/\s+/g, '');
+    var raw = String(t || '');
+    if (/\.{2,}|…/.test(raw)) { return false; }
+    if (/[?？]|ㅡㅡ|;;|ㅗ/.test(raw)) { return true; }
+    var x = raw.replace(/\s+/g, '');
     x = x.replace(/(끝내|헤어지|그만두|그만하|이별하)\S*(기)?(싫|않)\S*/g, '좋아').replace(/미안\S*/g, '');
-    return KK_NEG.test(x) || /ㅅㅂ|씨발|시발|짜증|화나|이해(가|도)?안|지치|질려|이기적|어이없|ㅈㄹ|지랄|뭔데|왜이래|너만생각|죄책감|가식|거짓|변명|웃기/.test(x);
+    return /^(왜|뭐|뭔|어쩌|어쩌라)/.test(x) || /어쩌라고|뭐라고|뭐가|뭘/.test(x) || KK_NEG.test(x) || /ㅅㅂ|씨발|시발|짜증|화나|이해(가|도)?안|지치|질려|이기적|어이없|ㅈㄹ|지랄|뭔데|왜이래|너만생각|죄책감|가식|거짓|변명|웃기/.test(x);
   }
   /* 음성 재생(없으면 6초 뒤 끊겨요). 끝나면 onEnd */
   function kkVoice(base, onEnd) {
