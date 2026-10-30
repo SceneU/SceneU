@@ -1058,14 +1058,16 @@
     if (/아니|아냐|ㄴㄴ|싫|노노|못/.test(x)) { return true; }
     return true;
   }
-  /* "난 진짜 너 위해서" 뒤의 답: 사과만 하면 false(버전 2), 사과 말고 더 부정적인 말이 나오면 true(버전 4) */
+  /* "난 진짜 너 위해서" 뒤의 답: 사과/긍정/애정 표현 또는 말줄임표면 false(버전 2), 그 밖의 답은 한 글자여도 true(버전 4) */
   function kkHarsh(t) {
     var raw = String(t || '');
     if (/\.{2,}|…/.test(raw)) { return false; }
-    if (/[?？]|ㅡㅡ|;;|ㅗ/.test(raw)) { return true; }
+    if (/[?？]/.test(raw)) { return true; }
     var x = raw.replace(/\s+/g, '');
-    x = x.replace(/(끝내|헤어지|그만두|그만하|이별하)\S*(기)?(싫|않)\S*/g, '좋아').replace(/미안\S*/g, '');
-    return /^(왜|뭐|뭔|어쩌|어쩌라)/.test(x) || /어쩌라고|뭐라고|뭐가|뭘/.test(x) || KK_NEG.test(x) || /ㅅㅂ|씨발|시발|짜증|화나|이해(가|도)?안|지치|질려|이기적|어이없|ㅈㄹ|지랄|뭔데|왜이래|너만생각|죄책감|가식|거짓|변명|웃기/.test(x);
+    if (/안보고|보고싶지(않|안)|사랑(안|하지않)|좋아하지않|싫|미안(안|하지않)|안미안/.test(x)) { return true; }
+    if (/^(응|웅|어|ㅇㅇ|ㅇ|ㅇㅋ|그래|그랭|알겠어|알았어|네|넹|넵)[.!~ㅎㅋ♡❤]*$/.test(x)) { return false; }
+    if (/미안|죄송|ㅈㅅ|ㅁㅇ|잘못했|보고싶|보고파|사랑|좋아해|고마|다시만나|돌아와/.test(x)) { return false; }
+    return true;
   }
   /* 음성 재생(없으면 6초 뒤 끊겨요). 끝나면 onEnd */
   function kkVoice(base, onEnd) {
@@ -1532,9 +1534,22 @@
         if (sp) { sp.insertAdjacentHTML('beforebegin', h); } else { body.insertAdjacentHTML('beforeend', h); }
         scroll();
       }
+      var mirror = null;
+      function measure() {
+        var w = inp.clientWidth || inp.offsetWidth;
+        if (!w || !inp.value) { return 38; }
+        if (!mirror) {
+          mirror = document.createElement('div');
+          mirror.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none;box-sizing:border-box;padding:8px 0;font-size:16px;line-height:22px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;word-break:normal;';
+          mirror.style.fontFamily = getComputedStyle(inp).fontFamily;
+          v.appendChild(mirror);
+        }
+        mirror.style.width = w + 'px';
+        mirror.textContent = inp.value + '\u200b';
+        return Math.ceil(mirror.offsetHeight);
+      }
       function autosize() {
-        inp.style.height = '0px';
-        var h = Math.max(38, Math.min(inp.scrollHeight, 112));
+        var h = Math.max(38, Math.min(measure(), 112));
         inp.style.height = h + 'px';
         v.style.setProperty('--kx', Math.max(0, h - 38) + 'px');
         inp.scrollTop = inp.scrollHeight;
