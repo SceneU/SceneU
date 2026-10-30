@@ -2110,7 +2110,7 @@
     var C0 = C.IG_REQ_POPS === undefined ? 10 : C.IG_REQ_POPS;
     if (igPopN >= C0) { return; }
     var ids = igReqIds(), id = ids[igPopN % ids.length]; igPopN++;
-    var text = id + '님이 회원님을 팔로우하도록 요청했습니다.';
+    var text = id + '님이 팔로우를 요청했습니다.';
     if (current === 'lock' && L.lock) {
       var box = qs(L.lock, '.notifs');
       if (box) {
