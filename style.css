@@ -952,3 +952,8 @@ svg{display:block}
 
 .ig-arc .bd{left:9px;top:8px;min-width:0;padding:5px 9px 6px;border-radius:10px;font-size:11px;box-shadow:none}
 .ig-arc .bd b{font-size:17px;margin-bottom:0}
+
+/* 좁은 화면에서 입력창이 전송 버튼을 밀어내지 않게 */
+.kr-in .fld{min-width:0}
+.kr-in .fld textarea{width:0}
+.kr-in{overflow:hidden}
