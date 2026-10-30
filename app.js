@@ -1182,7 +1182,7 @@
     /* 4 */ { auto: '회사에서는 뭐래?', reply: ['회사에서도 나도 너 의견이 가장 중요해', '넌 어떻게 하고 싶어'] },
     /* 5 */ { auto: '우리 이미 끝났는데 뭘 어떻게 하겠어' },
     /* 6 */ { auto: '괜히 나 때문에 미안해', reply: ['너 진짜 나랑 이렇게 끝낼 거야?'] },
-    /* 7 */ { go: function (t) { return kkKeep(t) ? { reply: ['보고싶어', '내가 마음고생 시켜서 미안해', '내가 진짜 잘할테니까', '나 다시 받아주면 안될까?'], next: 8 } : JHF.toBreakup; } },
+    /* 7 */ { go: function (t) { return kkKeep(t) ? { reply: ['보고싶어', '내가 마음고생 시켜서 미안해', '다음에 내가 진짜 잘할테니까', '나 다시 받아주면 안될까?'], next: 8 } : JHF.toBreakup; } },
     /* 8 */ { go: function (t) { return kkAccept(t) ? { reply: ['미친소리인 거 아는데', '공개연애할래?', '이미 이렇게 된 거', '좀 그렇겠지 너'], next: 9 } : JHF.toBreakup; } },
     /* 9 */ { go: function () { return { reply: [], next: 11, after: function () { setTimeout(JHF.finalCall, 900); } }; } },
     /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup', 2); }, 2400); } }; } },
