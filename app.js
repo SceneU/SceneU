@@ -947,7 +947,7 @@
       { auto: '어 봤어 나 정환이랑 이야기 좀 해봐야겠다', reply: ['형이랑 이야기 잘 해봐'],
         then: { wait: 2 * 60000, msgs: ['누나', '형 아침부터 엄청 혼나고 뛰어다녔어', '둘이 잘 해결했으면 좋겠어'] } },
       { auto: '', reply: ['나는 형이랑 누나 둘 다 응원해'] },
-      { auto: '', reply: [] }
+      { done: true }
     ]
   };
   /* ---- 가짜 한글 키패드: 자동 입력할 때 아래에서 올라오고 눌리는 글쇠가 깜빡여요 ---- */
@@ -2077,7 +2077,10 @@
 
   /* 인스타 아이콘은 그라데이션 id가 겹치면 홈 화면이 가려진 동안 비어 보여서, 쓸 때마다 새 id를 줘요 */
   var igIconN = 0;
-  function igIcon() { igIconN++; return ICO.instagram.replace(/igG/g, 'igG' + igIconN); }
+  function igIcon() {
+    /* 그라데이션 참조(url(#id)) 없이 CSS 배경으로 그려요 — 아이폰 사파리에서 알림 로고가 비던 문제 */
+    return '<span class="igi"><svg viewBox="0 0 60 60" width="100%" height="100%"><rect x="15" y="15" width="30" height="30" rx="9" fill="none" stroke="#fff" stroke-width="3"/><circle cx="30" cy="30" r="7" fill="none" stroke="#fff" stroke-width="3"/><circle cx="38.500" cy="21.500" r="2" fill="#fff"/></svg></span>';
+  }
   /* 인스타 팔로우 요청 아이디(알계처럼 무작위로 만들고, 같은 아이디가 계속 쓰이게 한 번만 만들어요) */
   var IG_RQ = null;
   function igReqIds() {
