@@ -791,3 +791,32 @@ svg{display:block}
 .ig-atabs span{flex:1;height:50px;display:flex;align-items:center;justify-content:center;border-bottom:2px solid transparent;margin-bottom:-.5px}
 .ig-atabs span.on{border-bottom-color:#111}
 .ig-arc{gap:2px}
+.kcall{position:absolute;inset:0;z-index:300;color:#fff;display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity .25s ease;-webkit-user-select:none;user-select:none}
+.kcall.on{opacity:1}
+.kcall .kc-bg{position:absolute;inset:0;background:linear-gradient(180deg,#4c5568 0%,#2c3140 55%,#1b1e29 100%);z-index:-1}
+.kcall .kc-top{margin-top:calc(var(--top) + 70px);display:flex;flex-direction:column;align-items:center;gap:6px}
+.kcall .kc-av{width:96px;height:96px;border-radius:50%;overflow:hidden;background:#8b93a3;position:relative;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:#d6dae2}
+.kcall .kc-av i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.kcall .kc-av i svg{width:54px;height:54px}
+.kcall .kc-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kcall .kc-name{font-size:34px;font-weight:600;letter-spacing:-.3px}
+.kcall .kc-sub{font-size:19px;opacity:.75}
+.kcall .kc-grid{display:none;margin-top:34px;display:none;grid-template-columns:repeat(3,78px);gap:22px 30px}
+.kcall.conn .kc-grid{display:grid}
+.kcall .kb2{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px}
+.kcall .kb2 i{width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.18);display:block}
+.kcall .kc-btm{position:absolute;left:0;right:0;bottom:calc(var(--sab) + 70px);display:flex;justify-content:space-around;padding:0 46px}
+.kcall .kc-btn{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.kcall .kc-btn i{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.kcall .kc-btn i svg{width:34px;height:34px}
+.kcall .kc-btn.dec i{background:#ff3b30}
+.kcall .kc-btn.dec i svg{transform:rotate(135deg)}
+.kcall .kc-btn.acc i{background:#34c759}
+.kcall .kc-btn.end{margin:0 auto}
+.kcall .kc-btn.end i{width:74px}
+.kend{position:absolute;inset:0;z-index:320;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .9s ease;text-align:center}
+.kend.on{opacity:1}
+.kend.good{background:radial-gradient(circle at 50% 42%,#ff9ec4 0%,#ff5d9e 55%,#c2185b 100%)}
+.kend.bad{background:radial-gradient(circle at 50% 42%,#3c4252 0%,#1a1d27 60%,#0b0c12 100%)}
+.kend .ke-t{font-size:36px;font-weight:800;color:#fff;letter-spacing:-.5px;text-shadow:0 2px 18px rgba(0,0,0,.25);margin-bottom:34px}
+.kend .ke-b{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:20px;padding:10px 20px;font-size:14px}

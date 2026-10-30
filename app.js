@@ -910,6 +910,157 @@
       '<div class="kr4"><i class="k fn w">123</i><i class="k fn g"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.800"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></i><i class="k sp" data-j=" ">스페이스</i><i class="k fn w r">줄바꿈</i></div>' +
       '</div>';
   }
+  /* =========================================================
+     신정환 카톡 시나리오: 전화 → 카톡 → 선택에 따라 재회/이별 엔딩
+     음성 파일: call-1.mp3(처음 통화), call-2.mp3(재회 쪽 마지막 통화) — 확장자는 mp3/m4a/wav 중 아무거나 돼요
+     ========================================================= */
+  var KK_VOICE = { first: './call-1', final: './call-2' };
+  var kkCtx = null;
+  document.addEventListener('pointerdown', function () {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC && !kkCtx) { kkCtx = new AC(); }
+      if (kkCtx && kkCtx.state === 'suspended') { kkCtx.resume(); }
+    } catch (e) {}
+  }, true);
+  /* 답장이 긍정인지 부정인지 말투로 가려요. 모호하면 긍정으로 봐요 */
+  var KK_NEG = /아니|아냐|안\s*(해|할|돼|되|갈|만나|받)|싫|끝내|끝이|끝났|헤어|그만|못\s*(해|하|만나|받)|꺼져|몰라|별로|ㄴㄴ|노노|됐어|관심\s*없|지겨|미워|연락\s*하지/;
+  var KK_POS = /응|웅|ㅇㅇ|좋|그래|알겠|알았|사랑|고마|보고\s*싶|다시|만나|하자|할게|해줘|괜찮|ㅎㅎ|ㅋㅋ|♡|❤|믿|용서|오빠|자기|그럴게|당연/;
+  function kkPos(t) {
+    var x = String(t || '');
+    x = x.replace(/(끝내|헤어지|그만두|그만하|이별하)\S*\s*(기\s*)?(싫|않)\S*/g, '좋아').replace(/(안|못)\s*(싫|미워)\S*/g, '좋아');
+    var n = (x.match(new RegExp(KK_NEG.source, 'g')) || []).length;
+    var p = (x.match(new RegExp(KK_POS.source, 'g')) || []).length;
+    return n <= p;
+  }
+  /* 음성 재생(없으면 6초 뒤 끊겨요). 끝나면 onEnd */
+  function kkVoice(base, onEnd) {
+    var exts = ['.mp3', '.m4a', '.wav', '.aac', '.ogg'], i = 0, a = null, ended = false, fb = null;
+    function end() { if (ended) { return; } ended = true; clearTimeout(fb); onEnd(); }
+    function tryNext() {
+      if (ended) { return; }
+      if (i >= exts.length) { fb = setTimeout(end, 6000); return; }
+      a = new Audio(); a.preload = 'auto'; a.src = base + exts[i++];
+      a.addEventListener('error', tryNext, { once: true });
+      a.addEventListener('ended', end);
+      var p = a.play(); if (p && p.catch) { p.catch(function () {}); }
+    }
+    tryNext();
+    return { stop: function () { ended = true; clearTimeout(fb); if (a) { try { a.pause(); } catch (e) {} } } };
+  }
+  function kkRing() {
+    var on = true, t = null, el1 = null;
+    try {
+      el1 = new Audio('./ringtone.mp3'); el1.loop = true;
+      el1.addEventListener('error', synth, { once: true });
+      var p = el1.play(); if (p && p.catch) { p.catch(function () {}); }
+    } catch (e) { synth(); }
+    var synthOn = false;
+    function synth() {
+      if (!on || synthOn) { return; } synthOn = true;
+      try {
+        if (!kkCtx) { var AC = window.AudioContext || window.webkitAudioContext; kkCtx = new AC(); }
+        if (kkCtx.state === 'suspended') { kkCtx.resume(); }
+      } catch (e) { return; }
+      var N = [880, 1175, 1319, 880, 1175, 1319];
+      (function burst() {
+        if (!on) { return; }
+        var now = kkCtx.currentTime;
+        N.forEach(function (f, k) {
+          var d = [0, 0.17, 0.34, 0.62, 0.79, 0.96][k], o = kkCtx.createOscillator(), g = kkCtx.createGain();
+          o.type = 'sine'; o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, now + d); g.gain.linearRampToValueAtTime(0.2, now + d + 0.02); g.gain.exponentialRampToValueAtTime(0.001, now + d + 0.3);
+          o.connect(g); g.connect(kkCtx.destination); o.start(now + d); o.stop(now + d + 0.32);
+        });
+        t = setTimeout(burst, 2600);
+      })();
+    }
+    return function () { on = false; clearTimeout(t); if (el1) { try { el1.pause(); } catch (e) {} } };
+  }
+  /* 전화 화면: 수락/거절 → 통화 화면 + 음성 → 음성이 끝나면 자동으로 끊겨요 */
+  function kkCall(o) {
+    var photo = './kk-jeonghwan.jpg';
+    var hs = I.handset;
+    var ov = el('<div class="kcall"><div class="kc-bg"></div>' +
+      '<div class="kc-top"><div class="kc-av"><i>' + I.person + '</i><img data-rm="1" src="' + esc(rs(photo)) + '" data-orig="' + esc(photo) + '" alt="" decoding="async" draggable="false"></div>' +
+      '<div class="kc-name">' + esc(o.name || '신정환') + '</div><div class="kc-sub">휴대전화</div></div>' +
+      '<div class="kc-grid"></div>' +
+      '<div class="kc-btm"><div class="kc-btn dec" id="kcDec"><i>' + hs + '</i><span>거절</span></div><div class="kc-btn acc" id="kcAcc"><i>' + hs + '</i><span>수락</span></div></div></div>');
+    phone.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add('on'); });
+    var stopRing = kkRing(), voice = null, timer = null, sec = 0, closed = false;
+    function close(cb) {
+      if (closed) { return; } closed = true;
+      clearInterval(timer); stopRing();
+      if (voice) { voice.stop(); }
+      qs(ov, '.kc-sub').textContent = '통화 종료';
+      setTimeout(function () { ov.classList.remove('on'); setTimeout(function () { ov.remove(); if (cb) { cb(); } }, 280); }, 700);
+    }
+    qs(ov, '#kcDec').addEventListener('click', function () {
+      close(function () {
+        if (o.onDecline) { o.onDecline(); }
+      });
+    });
+    qs(ov, '#kcAcc').addEventListener('click', function () {
+      stopRing();
+      var sub = qs(ov, '.kc-sub'), g = qs(ov, '.kc-grid');
+      ov.classList.add('conn');
+      g.innerHTML = ['소리 끔', '키패드', '스피커', '통화 추가', 'FaceTime', '연락처'].map(function (t) { return '<div class="kb2"><i></i><span>' + t + '</span></div>'; }).join('');
+      qs(ov, '.kc-btm').innerHTML = '<div class="kc-btn dec end" id="kcEnd"><i>' + hs + '</i></div>';
+      sub.textContent = '0:00';
+      timer = setInterval(function () { sec++; sub.textContent = Math.floor(sec / 60) + ':' + (sec % 60 < 10 ? '0' : '') + (sec % 60); }, 1000);
+      voice = kkVoice(o.voice, function () { close(function () { if (o.onEnd) { o.onEnd(); } }); });
+      qs(ov, '#kcEnd').addEventListener('click', function () { close(function () { if (o.onEnd) { o.onEnd(); } }); });
+    });
+    return ov;
+  }
+  function kkEnding(kind) {
+    var good = kind === 'reunion';
+    var ov = el('<div class="kend ' + (good ? 'good' : 'bad') + '"><div class="ke-in"><div class="ke-t">' + (good ? '재회엔딩💕💕' : '이별엔딩💔') + '</div><button type="button" class="ke-b">처음부터 다시</button></div></div>');
+    phone.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add('on'); });
+    qs(ov, '.ke-b').addEventListener('click', function () { location.reload(); });
+  }
+  var JH = '신정환';
+  var JHF = {
+    afterCall: function (unblock) { kkReplies(JH, ['미안해', '긴장돼서 말 못 하겠다', '카톡으로 말할게'], unblock); },
+    /* 처음 전화: 받으면 바로 버전 1·2로 이어져요. 거절하면 카톡 → 5초 뒤 두 번째 전화 → 거절하면 5초 뒤 세 번째 전화 → 또 거절하면 마지막 카톡 + 이별엔딩(전화는 총 3번) */
+    call1: function (unblock) {
+      function ok() { JHF.afterCall(unblock); }
+      function third() {
+        kkCall({ name: JH, voice: KK_VOICE.first, onEnd: ok,
+          onDecline: function () {
+            kkReplies(JH, ['나랑 이제 이야기도 하기 싫은가보네', '알았어', '전화해서 미안', '너한테 피해 안 가게 내가 알아서 해결할게', '잘 지내'], function () { setTimeout(function () { kkEnding('breakup'); }, 2200); });
+          } });
+      }
+      function second() {
+        kkCall({ name: JH, voice: KK_VOICE.first, onEnd: ok, onDecline: function () { setTimeout(third, 5000); } });
+      }
+      kkCall({ name: JH, voice: KK_VOICE.first, onEnd: ok,
+        onDecline: function () { kkIncoming(JH, '왜 전화 안 받아'); setTimeout(second, 5000); } });
+    },
+    /* 재회 쪽 마지막 전화: 받을 때까지 다시 와요 */
+    finalCall: function () {
+      (function ring() {
+        kkCall({ name: JH, voice: KK_VOICE.final, onEnd: function () { kkEnding('reunion'); }, onDecline: function () { setTimeout(ring, 3000); } });
+      })();
+    },
+    toBreakup: { reply: ['너 진짜 끝까지 너만 생각하네', '난 진짜 너 위해서'], next: 10 }
+  };
+  KK_SCRIPT[JH] = [
+    /* 0 */ { auto: '이제 일어났어', reply: [], after: function (unblock) { setTimeout(function () { JHF.call1(unblock); }, 700); } },
+    /* 1 */ { auto: '인터넷 봤어' },
+    /* 2 */ { auto: '미안해' },
+    /* 3 */ { auto: '인스타 지운다는 걸 깜빡했어' },
+    /* 4 */ { auto: '회사에서는 뭐래?', reply: ['회사에서도 나도 너 의견이 가장 중요해', '넌 어떻게 하고 싶어'] },
+    /* 5 */ { auto: '우리 이미 끝났는데 뭘 어떻게 하겠어' },
+    /* 6 */ { auto: '괜히 나 때문에 미안해', reply: ['너 진짜 나랑 이렇게 끝낼 거야?'] },
+    /* 7 */ { go: function (t) { return kkPos(t) ? { reply: ['내가 마음 고생 시켜서 미안해', '내가 앞으로 더 잘할게', '다시 받아줘서 고마워'], next: 8 } : JHF.toBreakup; } },
+    /* 8 */ { go: function (t) { return kkPos(t) ? { reply: ['미친소리인 거 아는데', '공개연애할래?', '이미 이렇게 된 거', '좀 그렇겠지 너'], next: 9 } : JHF.toBreakup; } },
+    /* 9 */ { go: function () { return { reply: [], next: 11, after: function () { setTimeout(JHF.finalCall, 900); } }; } },
+    /* 10 */ { go: function () { return { reply: ['아 아니다', '무슨 의미가 있겠냐', '너 마음 잘 알았고', '내가 최대한 너 피해 안 가게 해결할게', '나 때문에 미안하다', '앞으로 연락 안 할게'], next: 11, after: function () { setTimeout(function () { kkEnding('breakup'); }, 2400); } }; } },
+    /* 11 */ { done: true }
+  ];
   var kkS = {};          /* 방 이름 -> { step, blocked } */
   var kkUI = null;       /* 지금 열려 있는 카카오톡 화면 { layer, name, add(g), refresh(), goRoom(n) } */
   var KK_DATE = '2026-10-24';
@@ -968,24 +1119,22 @@
     })();
   }
   /* 내가 한 마디를 보냈을 때 스크립트 진행 */
-  function kkAfterSend(name) {
+  function kkAfterSend(name, text) {
     var st = kkState(name); if (!st) { return; }
-    var stp = KK_SCRIPT[name][st.step];
-    if (st.step < KK_SCRIPT[name].length - 1) { st.step++; }
-    if (!stp || !stp.reply || !stp.reply.length) { return; }
+    var script = KK_SCRIPT[name], stp = script[st.step] || {};
+    var r = stp.go ? stp.go(text) : stp;
+    st.step = (r.next !== undefined) ? r.next : Math.min(st.step + 1, script.length - 1);
+    var reply = r.reply || [];
+    if (!reply.length && !r.after && !r.then) { return; }
     st.blocked = true;
     var ui0 = kkUiLive(); if (ui0 && ui0.name === name) { ui0.field(); }
-    kkReplies(name, stp.reply, function () {
-      if (stp.then) {
-        setTimeout(function () {
-          kkReplies(name, stp.then.msgs, function () {
-            st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); }
-          });
-        }, stp.then.wait);
-      } else {
-        st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); }
-      }
-    });
+    function unblock() { st.blocked = false; var ui = kkUiLive(); if (ui && ui.name === name) { ui.field(); } }
+    function afterReplies() {
+      if (r.then) { setTimeout(function () { kkReplies(name, r.then.msgs, unblock); }, r.then.wait); }
+      else if (r.after) { r.after(unblock); }
+      else { unblock(); }
+    }
+    if (reply.length) { kkReplies(name, reply, afterReplies); } else { afterReplies(); }
   }
   IMPL.kakao = function (layer) {
     setHB('dark');
@@ -1204,7 +1353,7 @@
         if (!text || typing) { return; }
         var g = kkPush(name, 'me', text); inp.value = '';
         addMsg(g); syncSend(); inp.blur(); kbHide();
-        kkAfterSend(name);
+        kkAfterSend(name, text);
       }
       /* 입력창 상태: 막힘 / 자동 입력(누르면 쳐짐) / 직접 입력 */
       function field() {
@@ -1279,24 +1428,7 @@
         });
       });
     }
-    var RQ = G.requests;
-    if (!RQ || !RQ.length) {
-      var seed = 20261029, L = 'abcdefghijklmnopqrstuvwxyz', D = '0123456789';
-      function rnd(n) { seed = (seed * 1103515245 + 12345) % 2147483648; return Math.floor(seed / 65536) % n; }
-      function pick(set, n) { var o = ''; for (var i = 0; i < n; i++) { o += set.charAt(rnd(set.length)); } return o; }
-      var seen = {};
-      RQ = [];
-      while (RQ.length < 47) {
-        var t = rnd(6), u;
-        if (t === 0) { u = pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)) + pick(L, 1 + rnd(3)); }
-        else if (t === 1) { u = pick(L, 4 + rnd(4)) + '_' + pick(D, 2 + rnd(3)); }
-        else if (t === 2) { u = '_' + pick(L, 3 + rnd(3)) + pick(D, 1 + rnd(3)); }
-        else if (t === 3) { u = pick(L, 2 + rnd(2)) + '.' + pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)); }
-        else if (t === 4) { u = pick(L, 5 + rnd(4)); }
-        else { u = pick(D, 1) + pick(L, 3 + rnd(3)) + pick(D, 2 + rnd(3)); }
-        if (!seen[u]) { seen[u] = 1; RQ.push(u); }
-      }
-    }
+    var RQ = igReqIds();
     function pd(d) { var a = String(d).split('-'); return new Date(parseInt(a[0], 10), parseInt(a[1], 10) - 1, parseInt(a[2], 10)); }
     function md(d) { var x = pd(d); return (x.getMonth() + 1) + '월 ' + x.getDate() + '일'; }
     function ymd(d) { var x = pd(d); return x.getFullYear() + '년 ' + (x.getMonth() + 1) + '월 ' + x.getDate() + '일'; }
@@ -1797,9 +1929,67 @@
         updateBadge();
         if (xCtx && xCtx.tab === 'dm' && xCtx.renderDM) { xCtx.renderDM(); }
       }, 700);
-      if (dmArrived < C.DMS.length) { setTimeout(step, gap()); }
+      var g = gap();
+      setTimeout(igPop, g * 0.5);
+      if (dmArrived < C.DMS.length) { setTimeout(step, g); }
     }
     setTimeout(step, C.DM_FIRST_DELAY);
+  }
+
+  /* 인스타 팔로우 요청 아이디(알계처럼 무작위로 만들고, 같은 아이디가 계속 쓰이게 한 번만 만들어요) */
+  var IG_RQ = null;
+  function igReqIds() {
+    if (IG_RQ) { return IG_RQ; }
+    var cfg = C.INSTA && C.INSTA.requests;
+    if (cfg && cfg.length) { IG_RQ = cfg.slice(); return IG_RQ; }
+    var seed = 20261029, L = 'abcdefghijklmnopqrstuvwxyz', D = '0123456789';
+    function rnd(n) { seed = (seed * 1103515245 + 12345) % 2147483648; return Math.floor(seed / 65536) % n; }
+    function pick(set, n) { var o = ''; for (var i = 0; i < n; i++) { o += set.charAt(rnd(set.length)); } return o; }
+    var seen = {}, out = [];
+    while (out.length < 47) {
+      var t = rnd(6), u;
+      if (t === 0) { u = pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)) + pick(L, 1 + rnd(3)); }
+      else if (t === 1) { u = pick(L, 4 + rnd(4)) + '_' + pick(D, 2 + rnd(3)); }
+      else if (t === 2) { u = '_' + pick(L, 3 + rnd(3)) + pick(D, 1 + rnd(3)); }
+      else if (t === 3) { u = pick(L, 2 + rnd(2)) + '.' + pick(L, 2 + rnd(3)) + pick(D, 1 + rnd(2)); }
+      else if (t === 4) { u = pick(L, 5 + rnd(4)); }
+      else { u = pick(D, 1) + pick(L, 3 + rnd(3)) + pick(D, 2 + rnd(3)); }
+      if (!seen[u]) { seen[u] = 1; out.push(u); }
+    }
+    IG_RQ = out;
+    return IG_RQ;
+  }
+  /* 인스타 팔로우 요청 알림: 트위터 쪽지 사이사이에 번갈아 와요(잠금화면이면 알림으로, 아니면 위에서 내려오는 배너로) */
+  var igPopN = 0;
+  function igPop() {
+    var C0 = C.IG_REQ_POPS === undefined ? 10 : C.IG_REQ_POPS;
+    if (igPopN >= C0) { return; }
+    var ids = igReqIds(), id = ids[igPopN % ids.length]; igPopN++;
+    var text = id + '님이 회원님을 팔로우하도록 요청했습니다.';
+    if (current === 'lock' && L.lock) {
+      var box = qs(L.lock, '.notifs');
+      if (box) {
+        var old = qs(box, '.notif[data-ig]'); if (old) { old.remove(); }
+        var n = el('<div class="notif pop" data-ig="1"><div class="ic">' + ICO.instagram + '</div><div class="tx"><b>Instagram</b><span>' + esc(text) + '</span></div><div class="tm">방금</div></div>');
+        box.insertBefore(n, box.firstChild); bindLockNotifs(); lockDense();
+      }
+      return;
+    }
+    var b = el('<div class="banner"><div class="bi" style="background:none">' + ICO.instagram + '</div><div><b>Instagram</b><span>' + esc(text) + '</span></div></div>');
+    phone.appendChild(b);
+    b.style.pointerEvents = 'auto'; b.style.cursor = 'pointer';
+    b.addEventListener('click', function () {
+      if (b.__moved) { return; }
+      b.remove();
+      if (current === 'app' && curApp === 'instagram') { return; }
+      if (current === 'app') { closeApp(true); }
+      if (current === 'home') { openApp('instagram', null, { instant: true }); }
+    });
+    swipeAway(b);
+    void b.offsetWidth;
+    requestAnimationFrame(function () { b.classList.add('on'); });
+    setTimeout(function () { b.classList.remove('on'); }, 3200);
+    setTimeout(function () { b.remove(); }, 3800);
   }
 
   /* 인스타에서 좋아요를 처음 누르면 트위터 쪽지가 한 통 와요 */
