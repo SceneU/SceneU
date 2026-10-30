@@ -297,14 +297,15 @@
     var first = new Image();
     first.onload = function () { done(vs[0]); };
     first.onerror = function () {
-      if (n < 2) { done(''); return; }
-      vs.forEach(function (v, i) {
-        if (i === 0) { return; }
-        var im = new Image();
-        im.onload = function () { ok[i] = true; fin(); };
-        im.onerror = function () { ok[i] = false; fin(); };
+      /* 다른 확장자는 한 번에 하나씩만 시도해요(없는 사진 때문에 요청이 한꺼번에 몰리지 않게) */
+      var k = 1;
+      (function tryNext() {
+        if (k >= n) { done(''); return; }
+        var im = new Image(), v = vs[k++];
+        im.onload = function () { done(v); };
+        im.onerror = tryNext;
         im.src = v;
-      });
+      })();
     };
     first.src = vs[0];
   }
@@ -337,23 +338,34 @@
     var list = [C.IMG && C.IMG.lockWallpaper, C.IMG && C.IMG.homeWallpaper, (C.IMG && C.IMG.startBg) || './start-bg.jpg'];
     (C.TWEETS || []).forEach(function (t) { if (t && t.avatar) { list.push(t.avatar); } });
     list.forEach(function (s) { if (s) { resolve(s, function (v) { if (v) { var im = new Image(); im.src = v; if (im.decode) { im.decode().then(function () { DECODED[v] = true; }, function () {}); } } }); } });
+    /* 나머지 사진은 화면이 한가할 때 3장씩만 차례로 받아둬요(한꺼번에 받다가 지금 보는 사진이 늦어지지 않게) */
     setTimeout(function () {
-      var more = [];
-      (C.TWEETS || []).forEach(function (t) { (t.images || []).forEach(function (x) { more.push(x); }); });
-      (C.GALLERY || []).forEach(function (p) { if (p && p.src) { more.push(p.src); } });
-      if (C.INSTA) { (C.INSTA.posts || []).forEach(function (p) { if (p.img) { more.push(p.img); } }); (C.INSTA.stories || []).forEach(function (p) { if (p.img) { more.push(p.img); } }); }
-      more.forEach(function (x) { resolve(x, function () {}); });
-    }, 400);
+      var more = [], seen = {};
+      function add(x) { if (x && !seen[x]) { seen[x] = 1; more.push(x); } }
+      (C.TWEETS || []).forEach(function (t) { (t.images || []).forEach(add); });
+      (C.GALLERY || []).forEach(function (p) { if (p) { add(p.src); } });
+      if (C.INSTA) { (C.INSTA.posts || []).forEach(function (p) { add(p.img); }); (C.INSTA.stories || []).forEach(function (p) { add(p.img); }); }
+      var K0 = C.KAKAO && C.KAKAO.ROOMS; if (K0) { Object.keys(K0).forEach(function (n) { (K0[n].msgs || []).forEach(function (g) { add(g.img); }); }); }
+      (C.TRASH || []).forEach(function (p) { if (p) { add(p.src); } });
+      var idx = 0, active = 0;
+      function pump() {
+        while (active < 3 && idx < more.length) {
+          active++;
+          resolve(more[idx++], function (v) { if (v) { var im = new Image(); im.decoding = 'async'; im.src = v; } active--; pump(); });
+        }
+      }
+      pump();
+    }, 1200);
   }
   function avHtml(kind, name) {
     if (kind === 'person') { return '<div class="av">' + I.person + '</div>'; }
     return '<div class="av">' + esc(String(name || '?').charAt(0)) + '</div>';
   }
   function imgTag(src, cls) {
-    return '<img ' + (cls ? 'class="' + cls + '" ' : '') + 'src="' + esc(rs(src)) + '" alt="" draggable="false">';
+    return '<img ' + (cls ? 'class="' + cls + '" ' : '') + 'src="' + esc(rs(src)) + '" alt="" decoding="async" draggable="false">';
   }
   function xav(src, fb) {
-    return '<div class="xav' + (fb === 'black' ? ' blk' : '') + '">' + I.person + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="">' : '') + '</div>';
+    return '<div class="xav' + (fb === 'black' ? ' blk' : '') + '">' + I.person + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="" decoding="async">' : '') + '</div>';
   }
   function xavDefault() { return '<div class="xav">' + I.person + '</div>'; }
 
@@ -952,7 +964,7 @@
     var i = 0;
     (function next() {
       if (i >= list.length) { if (done) { done(); } return; }
-      setTimeout(function () { kkIncoming(name, list[i]); i++; next(); }, i === 0 ? 1800 : 1100);
+      setTimeout(function () { kkIncoming(name, list[i]); i++; next(); }, i === 0 ? 1800 : 1000 + Math.random() * 1000);
     })();
   }
   /* 내가 한 마디를 보냈을 때 스크립트 진행 */
@@ -1104,7 +1116,7 @@
     function renderChats() {
       var rows = chatRooms().map(function (r) {
         var u = kkUnread[r.name] || 0;
-        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52, r.name) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + kt(r.last.text) + '</div></div>' +
+        return '<div class="kk-row ch" data-f="' + esc(r.name) + '">' + avK(52, r.name) + '<div class="mid"><div class="l1"><b>' + esc(r.name) + '</b></div><div class="pv">' + (r.last.img ? '사진' : kt(r.last.text)) + '</div></div>' +
           '<div class="rt"><span class="tm">' + esc(listTime(r.last)) + '</span>' + (u > 0 ? '<i class="bd">' + u + '</i>' : '') + '</div></div>';
       }).join('');
       main.innerHTML = sbHtml('dark') +
@@ -1133,11 +1145,12 @@
       var first = !prev || g.d !== prev.d || g.from !== prev.from;
       var showTime = !nx || nx.from !== g.from || nx.t !== g.t || nx.d !== g.d;
       var tm = showTime ? '<span class="ktm">' + ktime(g.t) + '</span>' : '';
+      var inner = g.img ? '<div class="kb kimg"><i class="kph">' + I.photo + '</i><img data-rm="1" src="' + esc(rs(g.img)) + '" data-orig="' + esc(g.img) + '" alt="" decoding="async" draggable="false"></div>' : '<div class="kb">' + kt(g.text) + '</div>';
       if (g.from === 'me') {
-        html += '<div class="kr-msg me' + (first ? ' first' : '') + '" data-t="' + g.t + '">' + tm + '<div class="kb">' + kt(g.text) + '</div></div>';
+        html += '<div class="kr-msg me' + (first ? ' first' : '') + '" data-t="' + g.t + '">' + tm + inner + '</div>';
       } else {
         html += '<div class="kr-msg them' + (first ? ' first' : '') + '" data-t="' + g.t + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
-          '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow"><div class="kb">' + kt(g.text) + '</div>' + tm + '</div></div></div>';
+          '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="krow">' + inner + tm + '</div></div></div>';
       }
       return html;
     }
@@ -1150,7 +1163,7 @@
       var v = pushView(layer, sbHtml('dark') +
         '<div class="kr-top"><button type="button" class="back">' + I.back + '</button><b>' + esc(name) + '</b><div class="ics">' + kic.search + kic.menu + '</div></div>' +
         '<div class="kr-body" id="krb">' + html + '<div style="height:12px"></div></div>' +
-        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><input type="text" id="krI" placeholder="메시지 입력" autocomplete="off" autocapitalize="off" enterkeyhint="send">' + kic.emo + '</div><span class="hs" id="krH">' + kic.hash + '</span></div>' + (kkState(name) ? kkbHtml() : ''), 'kr');
+        '<div class="kr-in"><span class="pl">' + kic.plus + '</span><div class="fld"><textarea id="krI" rows="1" placeholder="메시지 입력" autocomplete="off" autocapitalize="off" enterkeyhint="send"></textarea>' + kic.emo + '</div><span class="hs" id="krH">' + kic.hash + '</span></div>' + (kkState(name) ? kkbHtml() : ''), 'kr');
       v.style.background = '#b2c7da';
       var body = qs(v, '#krb');
       requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
@@ -1172,7 +1185,16 @@
         if (sp) { sp.insertAdjacentHTML('beforebegin', h); } else { body.insertAdjacentHTML('beforeend', h); }
         scroll();
       }
+      function autosize() {
+        inp.style.height = '0px';
+        var h = Math.min(inp.scrollHeight, 112);
+        inp.style.height = h + 'px';
+        v.style.setProperty('--kx', Math.max(0, h - 22) + 'px');
+        inp.scrollTop = inp.scrollHeight;
+        scroll();
+      }
       function syncSend() {
+        autosize();
         var has = inp.value.length > 0 && !typing;
         hs.innerHTML = has ? '<button type="button" class="snd" aria-label="전송">' + SEND_IC + '</button>' : kic.hash;
         var bt = qs(hs, '.snd'); if (bt) { bt.addEventListener('click', doSend); }
@@ -1314,7 +1336,7 @@
       return '<div class="ig-av' + (ring ? ' ring' : '') + '" style="width:' + s + 'px;height:' + s + 'px">' + I.person.replace('<svg ', '<svg width="' + Math.round(s * 0.62) + '" height="' + Math.round(s * 0.62) + '" ') + '</div>';
     }
     function imBox(src, cls) {
-      return '<div class="ig-im ' + (cls || '') + '"><i class="ig-ph">' + I.photo + '</i>' + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="" draggable="false">' : '') + '</div>';
+      return '<div class="ig-im ' + (cls || '') + '"><i class="ig-ph">' + I.photo + '</i>' + (src ? '<img data-rm="1" src="' + esc(rs(src)) + '" data-orig="' + esc(src) + '" alt="" decoding="async" draggable="false">' : '') + '</div>';
     }
     G.posts.concat([]).forEach(function (p) { if (p.img) { resolve(p.img, function () {}); } });
     (G.stories || []).forEach(function (s) { if (s.img) { resolve(s.img, function () {}); } });
@@ -1325,13 +1347,14 @@
     function barHtml() {
       function b(id, icon, on) { return '<button type="button" class="' + (on ? 'on' : '') + '" data-t="' + id + '">' + icon + '</button>'; }
       var prof = '<div class="ig-pb' + (tab === 'profile' ? ' on' : '') + '">' + avatar(26) + '</div>';
-      return '<div class="ig-bar">' + b('home', tab === 'home' ? ic.homeOn : ic.home, tab === 'home') + '<span class="inert">' + ic.reels + '</span><span class="inert">' + ic.send + '</span><span class="inert">' + ic.search + '</span>' +
+      return '<div class="ig-bar">' + b('home', tab === 'home' ? ic.homeOn : ic.home, tab === 'home') + '<span class="inert">' + ic.reels + '</span>' + b('dm', ic.send, false) + '<span class="inert">' + ic.search + '</span>' +
         '<button type="button" data-t="profile">' + prof + '</button></div>';
     }
     function bindBar() {
       qsa(main, '.ig-bar button').forEach(function (b) {
         b.addEventListener('click', function () {
           var t = b.getAttribute('data-t');
+          if (t === 'dm') { openDmList(); return; }
           if (t !== tab) { tab = t; render(); }
         });
       });
@@ -1404,13 +1427,22 @@
       });
     }
     function openArchive() {
+      var prevKey = '';
       var cells = (G.stories || []).map(function (s, i) {
-        var d = pd(s.date);
-        return '<div class="c" data-i="' + i + '">' + imBox(s.img, 'fill') + '<span class="bd"><b>' + d.getDate() + '</b>' + (d.getMonth() + 1) + '월</span></div>';
+        var d = pd(s.date), key = s.date;
+        var badge = key !== prevKey ? '<span class="bd"><b>' + d.getDate() + '</b>' + (d.getMonth() + 1) + '월</span>' : '';
+        prevKey = key;
+        return '<div class="c" data-i="' + i + '">' + imBox(s.img, 'fill') + badge + '</div>';
       }).join('');
+      var T = {
+        story: '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#111" stroke-width="2.600" stroke-linecap="round"><circle cx="15" cy="15" r="11.500" stroke-dasharray="3.500 3.600"/></svg>',
+        heart: '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#8e8e8e" stroke-width="2.200" stroke-linecap="round"><circle cx="15" cy="15" r="11.500" stroke-dasharray="3.500 3.600"/><path d="M15 20.500s-5.500-3.300-5.500-7a3 3 0 015.500-1.600 3 3 0 015.500 1.600c0 3.700-5.500 7-5.500 7z" stroke-linejoin="round"/></svg>',
+        cal: '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#8e8e8e" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"><rect x="3.500" y="5.500" width="23" height="21" rx="4"/><path d="M9.500 3v5M20.500 3v5M3.500 11.500h23"/><text x="15" y="23" text-anchor="middle" font-size="9" font-weight="700" fill="#8e8e8e" stroke="none" font-family="-apple-system,Helvetica,Arial">30</text></svg>',
+        pin: '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#8e8e8e" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"><path d="M15 26s8-6.800 8-13.200a8 8 0 00-16 0C7 19.200 15 26 15 26z"/><circle cx="15" cy="12.800" r="2.800"/></svg>'
+      };
       var v = pushView(layer, sbHtml('dark') +
-        '<div class="ig-top"><button type="button" class="back">' + ic.back + '</button><b class="tt">보관</b><span class="sp"></span></div>' +
-        '<div class="ig-scroll"><div class="ig-arc-h">스토리 보관함 ' + ic.chevD + '</div><div class="ig-arc">' + cells + '</div><div style="height:60px"></div></div>', 'igv');
+        '<div class="ig-top ig-ah"><button type="button" class="back circ" aria-label="뒤로">' + ic.back + '</button><b class="tt">스토리 보관함 ' + ic.chevD + '</b><span class="sp"></span><span class="circ inert"><svg width="22" height="22" viewBox="0 0 24 24" fill="#111"><circle cx="5" cy="12" r="1.900"/><circle cx="12" cy="12" r="1.900"/><circle cx="19" cy="12" r="1.900"/></svg></span></div>' +
+        '<div class="ig-scroll"><div class="ig-atabs"><span class="on">' + T.story + '</span><span>' + T.heart + '</span><span>' + T.cal + '</span><span>' + T.pin + '</span></div><div class="ig-arc">' + cells + '</div><div style="height:60px"></div></div>', 'igv');
       qs(v, '.back').addEventListener('click', function () { popView(v); });
       qsa(v, '.ig-arc .c').forEach(function (c) {
         c.addEventListener('click', function () { openStory(parseInt(c.getAttribute('data-i'), 10)); });
@@ -1645,7 +1677,7 @@
   function kakaoLockHtml() {
     var K = C.KAKAO; if (!K || !K.ROOMS) { return ''; }
     var out = [];
-    ['신정환', '최영재'].forEach(function (n) {
+    ['신정환', '최영재', '이경민'].forEach(function (n) {
       var r = K.ROOMS[n]; if (!r || !r.unread || !r.msgs || !r.msgs.length) { return; }
       var l = r.msgs[r.msgs.length - 1];
       if (l.from !== 'them') { return; }
@@ -1653,7 +1685,7 @@
     });
     out.sort(function (a, b) { return (b.l.d + b.l.t).localeCompare(a.l.d + a.l.t); });
     return out.map(function (o) {
-      return '<div class="notif" data-kk="' + esc(o.n) + '"><div class="ic">' + ICO.kakao + '</div><div class="tx"><b>' + esc(o.n) + '</b><span>' + esc(fillName(o.l.text)) + '</span></div><div class="tm">' + esc(o.l.t) + '</div></div>';
+      return '<div class="notif" data-kk="' + esc(o.n) + '"><div class="ic">' + ICO.kakao + '</div><div class="tx"><b>' + esc(o.n) + '</b><span>' + esc(o.l.img ? '사진' : fillName(o.l.text)) + '</span></div><div class="tm">' + esc(o.l.t) + '</div></div>';
     }).join('');
   }
   function xFollowHtml() {

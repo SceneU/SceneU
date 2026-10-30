@@ -1,5 +1,5 @@
 /* 우리의 하루 - 서비스 워커 (상대경로 기준, 오프라인에서도 열리게) */
-var CACHE = 'ourday-v3';
+var CACHE = 'ourday-v4';
 var CORE = ['./', './index.html', './style.css', './app.js', './config.js', './manifest.webmanifest'];
 
 self.addEventListener('install', function (e) {

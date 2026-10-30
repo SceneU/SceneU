@@ -772,3 +772,22 @@ svg{display:block}
 .kkb .kr4 .r{background:#adb1ba}
 .kkb .k.p{background:#c4c7ce;transform:translateY(1px)}
 .kkb .k.sp.p{background:#c4c7ce}
+.kr-in{align-items:flex-end}
+.kr-in .fld{height:auto;min-height:38px;align-items:flex-end;padding:0 12px;border-radius:19px}
+.kr-in .fld textarea{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;line-height:22px;color:#111;outline:none;padding:8px 0;resize:none;overflow-y:auto;height:22px;max-height:112px;-webkit-appearance:none;appearance:none;display:block}
+.kr-in .fld svg{margin-bottom:6.5px;flex:none}
+.kr-in .pl,.kr-in .hs{align-self:flex-end}
+.kr .kr-body{padding-bottom:calc(90px + var(--kx,0px))}
+.kr.kbup .kr-body{padding-bottom:calc(var(--kbh) + 60px + var(--kx,0px))}
+.kr-msg .kb.kimg{padding:0;overflow:hidden;width:200px;min-height:150px;position:relative;background:#dfe3e8;border-radius:14px}
+.kr-msg.them:first-child .kb.kimg,.kr-msg.them.first .kb.kimg{border-top-left-radius:4px}
+.kr-msg .kb.kimg .kph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa3ad}
+.kr-msg .kb.kimg .kph svg{width:44px;height:44px}
+.kr-msg .kb.kimg img{position:relative;display:block;width:100%;height:auto;max-height:300px;object-fit:cover}
+.ig-ah{padding:0 12px;gap:8px}
+.ig-ah .tt{display:flex;align-items:center;justify-content:center;gap:6px;font-size:17px}
+.ig-ah .circ{width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 1px 10px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;margin:0;position:relative;z-index:1;flex:none}
+.ig-atabs{display:flex;border-bottom:.5px solid #dbdbdb;margin-bottom:2px}
+.ig-atabs span{flex:1;height:50px;display:flex;align-items:center;justify-content:center;border-bottom:2px solid transparent;margin-bottom:-.5px}
+.ig-atabs span.on{border-bottom-color:#111}
+.ig-arc{gap:2px}
