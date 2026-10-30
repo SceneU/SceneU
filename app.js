@@ -150,6 +150,9 @@
     del: function (k) { delete mem[k]; try { localStorage.removeItem(k); } catch (e) {} }
   };
 
+  var notifOff = false;
+  try { notifOff = (localStorage.getItem('ourday.notifOff') === '1'); } catch (e) {}
+  function setNotifOff(v) { notifOff = !!v; try { localStorage.setItem('ourday.notifOff', v ? '1' : '0'); } catch (e) {} }
   var USER = { last: '', first: '', name: '', igId: '' };
   function fullName() { return (USER.last || '') + (USER.first || USER.name || ''); }
   function saveUser() { USER.name = USER.first; try { store.set('ourday.user', JSON.stringify(USER)); } catch (e) {} }
@@ -600,13 +603,20 @@
       layer.style.transformOrigin = (r.left + r.width / 2 - pr.left) + 'px ' + (r.top + r.height / 2 - pr.top) + 'px';
     }
     phone.insertBefore(layer, hbHit);
-    if (!(opts && opts.instant)) {
-      layer.classList.add('opening');
-      layer.addEventListener('animationend', function f() { layer.classList.remove('opening'); layer.removeEventListener('animationend', f); });
-    }
+    var animate = !(opts && opts.instant);
+    if (animate) { layer.classList.add('prep'); }
     current = 'app'; curApp = id;
     L.app = layer;
     appCleanup = IMPL[id](layer) || null;
+    if (animate) {
+      /* 화면 내용을 먼저 다 그려 놓고(무거운 작업 끝) 그다음 애니메이션을 시작해야 안 끊겨요 */
+      void layer.offsetWidth;
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        if (!layer.isConnected || L.app !== layer) { layer.classList.remove('prep'); return; }
+        layer.classList.remove('prep'); layer.classList.add('opening');
+        layer.addEventListener('animationend', function f() { layer.classList.remove('opening'); layer.removeEventListener('animationend', f); });
+      }); });
+    }
   }
   function closeApp(instant) {
     if (current !== 'app' || !L.app) { return; }
@@ -644,8 +654,13 @@
 
   /* 오른쪽에서 밀려 들어오는 하위 화면 */
   function pushView(parent, html, cls) {
-    var v = el('<div class="view slide-in ' + (cls || '') + '">' + html + '</div>');
+    var v = el('<div class="view prep ' + (cls || '') + '">' + html + '</div>');
     parent.appendChild(v);
+    void v.offsetWidth;
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      v.classList.remove('prep');
+      if (v.isConnected && !v.__cancel) { v.classList.add('slide-in'); }
+    }); });
     return v;
   }
   function popView(v, after) {
@@ -700,10 +715,16 @@
         '<label class="st-row st-in"><span class="st-tx">이름</span><input id="stFirst" maxlength="8" autocomplete="off"></label>' +
         '<label class="st-row st-in"><span class="st-tx">인스타그램</span><input id="stIg" maxlength="30" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></label>' +
       '</div><div class="st-foot">바꾸면 바로 저장돼요.</div>' +
+      '<div class="st-grp"><div class="st-row" id="stNotif"><span class="st-ic" style="background:#ff3b30"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a6 6 0 00-6 6v4l-2 3v1h16v-1l-2-3V8a6 6 0 00-6-6zm-2 17a2 2 0 004 0z"/></svg></span><span class="st-tx">알림 끄기</span><span class="st-tg real' + (notifOff ? ' on' : '') + '" id="stTg"><i></i></span></div></div>' +
+      '<div class="st-foot">켜면 X 쪽지와 인스타그램 알림이 오지 않아요.</div>' +
       grp(G1) + grp(G2) + grp(G3) +
       '<div class="st-grp"><button type="button" class="st-row st-reset" id="stReset">처음부터 다시 하기</button></div>' +
       '<div style="height:40px"></div></div></div>';
     var iL = qs(layer, '#stLast'), iF = qs(layer, '#stFirst'), iI = qs(layer, '#stIg');
+    qs(layer, '#stNotif').addEventListener('click', function () {
+      setNotifOff(!notifOff);
+      qs(layer, '#stTg').classList.toggle('on', notifOff);
+    });
     iL.value = USER.last || ''; iF.value = USER.first || USER.name || ''; iI.value = USER.igId || '';
     function paint() {
       qs(layer, '#stNm').textContent = fullName();
@@ -1246,7 +1267,10 @@
     var i = 0;
     (function next() {
       if (i >= list.length) { if (done) { done(); } return; }
-      setTimeout(function () { kkIncoming(name, list[i]); i++; next(); }, i === 0 ? 1800 : 1000 + Math.random() * 1000);
+      var wait = i === 0 ? 1800 : 1000 + Math.random() * 1000;
+      var ui = kkUiLive();
+      if (ui && ui.name === name) { setTimeout(function () { var u = kkUiLive(); if (u && u.name === name) { u.typing(true); } }, i === 0 ? 500 : 80); }
+      setTimeout(function () { var u = kkUiLive(); if (u && u.name === name) { u.typing(false); } kkIncoming(name, list[i]); i++; next(); }, wait);
     })();
   }
   /* 내가 한 마디를 보냈을 때 스크립트 진행 */
@@ -1455,7 +1479,19 @@
       function kbShow() { v.classList.add('kbup'); setTimeout(scroll, 120); setTimeout(scroll, 400); }
       function kbHide() { v.classList.remove('kbup'); }
       body.addEventListener('click', function () { if (!typing) { kbHide(); } });
+      function typingRow(on) {
+        var old = qs(body, '.kr-typ'); if (old) { old.remove(); }
+        if (!on) { return; }
+        var last = room.msgs[room.msgs.length - 1];
+        var first = !last || last.from !== 'them';
+        var h = '<div class="kr-typ">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
+          '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="kb kdots"><i></i><i></i><i></i></div></div></div>';
+        var sp = qs(body, 'div[style*="height:12px"]');
+        if (sp) { sp.insertAdjacentHTML('beforebegin', h); } else { body.insertAdjacentHTML('beforeend', h); }
+        scroll();
+      }
       function addMsg(g) {
+        typingRow(false);
         var prev = room.msgs[room.msgs.length - 2];
         if (prev && prev.from === g.from && prev.d === g.d && prev.t === g.t) {
           var rows = qsa(body, '.kr-msg'), lr = rows[rows.length - 1];
@@ -1534,10 +1570,10 @@
         inp.readOnly = true; inp.setAttribute('inputmode', 'none'); autosize();
         qs(v, '.fld').addEventListener('click', function () { /* 이 방은 아직 직접 칠 수 없어요 */ });
       }
-      kkUI = { layer: layer, name: name, add: addMsg, refresh: listRefresh, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
+      kkUI = { layer: layer, name: name, add: addMsg, typing: typingRow, refresh: listRefresh, field: field, goRoom: function (n) { v.remove(); kkUI.name = null; openRoom(n); } };
       qs(v, '.back').addEventListener('click', function () { clearInterval(typeTimer); kkUI.name = null; popView(v, function () { render(); }); });
     }
-    kkUI = { layer: layer, name: null, add: function () {}, refresh: listRefresh, field: function () {}, goRoom: function (n) { openRoom(n); } };
+    kkUI = { layer: layer, name: null, add: function () {}, typing: function () {}, refresh: listRefresh, field: function () {}, goRoom: function (n) { openRoom(n); } };
     render();
     if (kkGoto) { var g0 = kkGoto; kkGoto = null; tab = 'chats'; render(); openRoom(g0); }
   };
@@ -1924,6 +1960,7 @@
     if (b) { b.textContent = n; b.style.display = n > 0 ? 'flex' : 'none'; }
   }
   function bannerShow(d) {
+    if (notifOff) { return; }
     var bdm = d;
     var b = el('<div class="banner"><div class="bi" style="color:#fff">' + I.xlogo(22) + '</div><div><b>새 쪽지</b><span>' + esc(d.name) + ': ' + rich(d.msgs[0]) + '</span></div></div>');
     phone.appendChild(b);
@@ -1940,6 +1977,7 @@
   }
   /* 새벽 사이에 이미 와 있던 쪽지는 하나로 묶어서 보여줘요(실제 도착 시각으로) */
   function preGroupHtml() {
+    if (notifOff) { return ''; }
     var n = 0, last = null;
     for (var i = 0; i < DM_PRE; i++) { if (!dmRead[C.DMS[i].id]) { n++; last = C.DMS[i]; } }
     if (!n) { return ''; }
@@ -1960,6 +1998,7 @@
     }).join('');
   }
   function xFollowHtml() {
+    if (notifOff) { return ''; }
     var n = (C.NOTIS || [])[0];
     if (!n) { return ''; }
     var who = n.who[0] + (n.more > 0 ? '님 외 ' + n.more + '명이' : '님이');
@@ -1969,6 +2008,7 @@
     lockScrollMode();
   }
   function addLockNotif(d) {
+    if (notifOff) { return; }
     if (!L.lock) { return; }
     var box = qs(L.lock, '.notifs');
     if (!box) { return; }
@@ -2107,6 +2147,7 @@
   /* 인스타 팔로우 요청 알림: 트위터 쪽지 사이사이에 번갈아 와요(잠금화면이면 알림으로, 아니면 위에서 내려오는 배너로) */
   var igPopN = 0;
   function igPop() {
+    if (notifOff) { return; }
     var C0 = C.IG_REQ_POPS === undefined ? 10 : C.IG_REQ_POPS;
     if (igPopN >= C0) { return; }
     var ids = igReqIds(), id = ids[igPopN % ids.length]; igPopN++;
@@ -2189,6 +2230,10 @@
         '<button type="button" data-go="dm">' + (ctx.tab === 'dm' ? I.mailOn : I.mail) + '<span class="bg2" id="dmBadge" style="display:' + (n > 0 ? 'flex' : 'none') + '">' + n + '</span></button></div>';
     }
     function bindBar() {
+      qsa(base, '.t1 .me, .me2').forEach(function (b) {
+        b.style.cursor = 'pointer';
+        b.addEventListener('click', function () { if (ctx.tab !== 'me') { ctx.tab = 'me'; render(); } });
+      });
       qsa(base, '[data-soon]').forEach(function (b) { b.addEventListener('click', soon); });
       qsa(base, '[data-go]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -2310,14 +2355,34 @@
         '<div class="me-btns"><span>프로필 공유</span><span>프로필 수정</span></div>' +
         '<div class="me-name">&nbsp;</div><div class="me-hd">@' + esc(USER.igId) + '</div>' +
         '<div class="me-join">' + cal + '<span>2026년 10월에 가입함</span></div>' +
-        '<div class="me-fol"><span><b>0</b> 팔로잉</span><span><b>0</b> 팔로워</span></div>' +
+        '<div class="me-fol"><span><b>0</b> 팔로잉</span><span><b>19,385</b> 팔로워</span></div>' +
         '<div class="me-tabs">' + tabs + '</div>' +
         '<div class="act-empty"><h2>아직 게시물이 없습니다</h2><p>게시물을 올리면 여기에 표시됩니다.</p></div></div>' +
         '<button class="fab" type="button" data-soon="1">' + I.plus.replace('width="20" height="20"', 'width="26" height="26"') + '</button>' + barHtml();
       bindBar();
       qs(base, '.me-banner .back').addEventListener('click', function () { ctx.tab = 'home'; render(); });
+      var fl = qsa(base, '.me-fol span')[1];
+      if (fl) { fl.style.cursor = 'pointer'; fl.addEventListener('click', function () { ctx.tab = 'fol'; render(); }); }
     }
-    function render() { if (ctx.tab === 'me') { renderMe(); return; } if (ctx.tab === 'home') { renderHome(); } else if (ctx.tab === 'search') { renderSearch(); } else if (ctx.tab === 'noti') { renderNoti(); } else { renderDM(); } }
+    /* 팔로워 목록: 알림 목록에 있는 알계들이 팔로우한 것처럼 일부분 보여줘요 */
+    function renderFollowers() {
+      var seen = {}, ids = [];
+      (C.NOTIS || []).forEach(function (n) { (n.who || []).forEach(function (w) { if (!seen[w]) { seen[w] = 1; ids.push(w); } }); });
+      var tab = 'fol';
+      function draw() {
+        var rows = tab === 'fol' ? ids.map(function (id) {
+          return '<div class="fl-r">' + xavDefault() + '<div class="fl-n"><b>' + esc(id) + '</b><span>@' + esc(id) + '</span></div><span class="fl-b">팔로우</span></div>';
+        }).join('') : '<div class="act-empty"><h2>아직 팔로우한 계정이 없어요</h2></div>';
+        base.innerHTML = sbHtml('dark') +
+          '<div class="fl-top"><button type="button" class="back" aria-label="뒤로">' + I.back + '</button><div class="fl-t"><b>' + esc(fullName()) + '</b><span>@' + esc(USER.igId) + '</span></div></div>' +
+          '<div class="fl-tabs"><span data-k="fol" class="' + (tab === 'fol' ? 'on' : '') + '"><em>팔로워</em></span><span data-k="ing" class="' + (tab === 'ing' ? 'on' : '') + '"><em>팔로잉</em></span></div>' +
+          '<div class="fl-list">' + rows + '</div>';
+        qs(base, '.fl-top .back').addEventListener('click', function () { ctx.tab = 'me'; render(); });
+        qsa(base, '.fl-tabs span').forEach(function (t) { t.addEventListener('click', function () { tab = t.getAttribute('data-k'); draw(); }); });
+      }
+      draw();
+    }
+    function render() { if (ctx.tab === 'fol') { renderFollowers(); return; } if (ctx.tab === 'me') { renderMe(); return; } if (ctx.tab === 'home') { renderHome(); } else if (ctx.tab === 'search') { renderSearch(); } else if (ctx.tab === 'noti') { renderNoti(); } else { renderDM(); } }
 
     /* 피드/상세에서 쓰는 공통 동작: 마음, 트윗 열기, 재게시 숫자 */
     function bindFeed(scope) {
@@ -2455,7 +2520,7 @@
         bub + '<div class="dbub"><div class="t">' + esc(d.time) + '</div></div></div>' +
         '<div class="dm-in"><span class="pl">' + I.plus.replace('width="20" height="20"', 'width="26" height="26"') + '</span><div><span>쪽지</span>' + I.mic.replace('width="18" height="18"', 'width="24" height="24"') + '</div></div>', 'xa');
       v.style.background = '#fff';
-      if (instant) { v.classList.remove('slide-in'); }
+      if (instant) { v.__cancel = true; v.classList.remove('slide-in'); }
       qs(v, '.back').addEventListener('click', function () {
         popView(v, function () { updateBadge(); if (ctx.tab === 'dm') { renderDM(); } });
       });
