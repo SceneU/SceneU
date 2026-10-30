@@ -8,7 +8,7 @@ window.CONFIG = {
   TIME: "8:00",                // 폰 안의 시간 (24시간제, 항상 고정)
   DATE: "10월 24일 토요일",       // 잠금화면 날짜
   CARRIER: "SKT",              // 잠금화면 왼쪽 위 글자
-  YOUTUBE_URL: "https://youtu.be/bMgH4IQ8wMI?si=aPlpe7zaxmm6CFCP",
+  YOUTUBE_URL: "https://www.youtube.com/watch?v=YT2BsIWLZ8Q",
 
   /* ---------- 이미지 경로 (같은 이름으로 덮어쓰면 교체돼요) ---------- */
   IMG: {
