@@ -1484,7 +1484,7 @@
         if (!on) { return; }
         var last = room.msgs[room.msgs.length - 1];
         var first = !last || last.from !== 'them';
-        var h = '<div class="kr-typ">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
+        var h = '<div class="kr-typ' + (first ? ' first' : '') + '">' + (first ? avK(40, name) : '<div class="ksp"></div>') +
           '<div class="kcol">' + (first ? '<div class="knm">' + esc(name) + '</div>' : '') + '<div class="kb kdots"><i></i><i></i><i></i></div></div></div>';
         var sp = qs(body, 'div[style*="height:12px"]');
         if (sp) { sp.insertAdjacentHTML('beforebegin', h); } else { body.insertAdjacentHTML('beforeend', h); }
