@@ -5,6 +5,9 @@
 (function () {
   'use strict';
   var C = window.CONFIG;
+  /* 다국어: 한국어가 아니면 설정 파일의 글도 번역해요 */
+  function tr(x) { return window.I18N ? window.I18N.t(x) : x; }
+  if (window.I18N && !window.I18N.isKo) { window.I18N.localizeConfig(C); if (window.INSTA_CONFIG) { window.I18N.localizeConfig(window.INSTA_CONFIG); } }
   /* config.js 에 문법 오류가 있으면 검은 화면 대신 안내를 보여줘요 */
   if (!C) {
     var errBox = document.getElementById('phone');
@@ -233,7 +236,7 @@
 
   /* ---------- 앱 아이콘 (직접 그린 단순한 아이콘) ---------- */
   function fillName(x) {
-    x = String(x);
+    x = tr(String(x));
     return x.replace(/\{NAME\}아/g, function () {
       var c = String(USER.name || '').charCodeAt(String(USER.name || '').length - 1);
       var jong = c >= 0xAC00 && c <= 0xD7A3 && ((c - 0xAC00) % 28) !== 0;
@@ -429,11 +432,27 @@
   /* =========================================================
      시작 화면
      ========================================================= */
+  /* 언어 고르기 (한국어 / English / 日本語 / 简体中文) */
+  function langBarHtml() {
+    if (!window.I18N) { return ''; }
+    return '<div class="langbar">' + window.I18N.order.map(function (l) {
+      return '<button type="button" class="lg' + (l === window.I18N.lang ? ' on' : '') + '" data-lang="' + l + '">' + window.I18N.labels[l] + '</button>';
+    }).join('') + '</div>';
+  }
+  function bindLangBar(root) {
+    qsa(root, '.langbar .lg').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var l = b.getAttribute('data-lang');
+        if (l !== window.I18N.lang) { window.I18N.set(l); }
+      });
+    });
+  }
   function showStart() {
     current = 'start';
     clearLayers();
     setHB('off');
     var s = el('<section class="layer start fade-in"><div class="card">' +
+      langBarHtml() +
       '<p class="sub">시작하기 전에 알려주세요</p>' +
       '<div class="row2"><label>성<input id="inLast" maxlength="4" autocomplete="off" placeholder="성"></label>' +
       '<label>이름<input id="inName" maxlength="8" autocomplete="off" placeholder="이름"></label></div>' +
@@ -450,6 +469,7 @@
         s.style.backgroundPosition = 'center';
       });
     })();
+    bindLangBar(s);
     var inLast = qs(s, '#inLast'), inName = qs(s, '#inName'), inIg = qs(s, '#inIg'), go = qs(s, '#goBtn');
     function clean() {
       inIg.value = inIg.value.replace(/^@+/, '').replace(/[^A-Za-z0-9_.]/g, '');
@@ -723,6 +743,7 @@
       '<div class="st-grp"><div class="st-row" id="stNotif"><span class="st-ic" style="background:#ff3b30"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a6 6 0 00-6 6v4l-2 3v1h16v-1l-2-3V8a6 6 0 00-6-6zm-2 17a2 2 0 004 0z"/></svg></span><span class="st-tx">알림 끄기</span><span class="st-tg real' + (notifOff ? ' on' : '') + '" id="stTg"><i></i></span></div></div>' +
       '<div class="st-foot">켜면 X 쪽지와 인스타그램 알림이 오지 않아요.</div>' +
       grp(G1) + grp(G2) + grp(G3) +
+      (window.I18N ? '<div class="st-grp"><div class="st-row" id="stLang"><span class="st-ic" style="background:#007aff"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.500 3 14.500 0 18M12 3c-3 3.500-3 14.500 0 18"/></svg></span><span class="st-tx">언어</span><span class="st-val">' + window.I18N.labels[window.I18N.lang] + '</span></div></div>' : '') +
       '<div class="st-grp"><button type="button" class="st-row st-reset" id="stReset">처음부터 다시 하기</button></div>' +
       '<div style="height:40px"></div></div></div>';
     var iL = qs(layer, '#stLast'), iF = qs(layer, '#stFirst'), iI = qs(layer, '#stIg');
@@ -744,6 +765,20 @@
       if (iI.value) { USER.igId = iI.value; saveUser(); }
     });
     iI.addEventListener('blur', function () { iI.value = USER.igId; });
+    var stLang = qs(layer, '#stLang');
+    if (stLang) {
+      stLang.addEventListener('click', function () {
+        var o = el('<div class="st-ov"><div class="st-sheet"><div class="st-st"><b>언어</b></div>' +
+          window.I18N.order.map(function (l) { return '<button type="button" class="st-ok" data-lang="' + l + '" style="' + (l === window.I18N.lang ? 'font-weight:700' : '') + '">' + window.I18N.labels[l] + '</button>'; }).join('') +
+          '<button type="button" class="st-no" id="stNo">취소</button></div></div>');
+        phone.appendChild(o);
+        requestAnimationFrame(function () { o.classList.add('on'); });
+        qs(o, '#stNo').addEventListener('click', function () { o.classList.remove('on'); setTimeout(function () { o.remove(); }, 220); });
+        qsa(o, '[data-lang]').forEach(function (b) {
+          b.addEventListener('click', function () { var l = b.getAttribute('data-lang'); if (l !== window.I18N.lang) { window.I18N.set(l); } else { o.remove(); } });
+        });
+      });
+    }
     qs(layer, '#stReset').addEventListener('click', function () {
       var o = el('<div class="st-ov"><div class="st-sheet"><div class="st-st"><b>처음부터 다시 할까요?</b><span>지금까지의 진행 상황이 모두 초기화돼요. 이름과 인스타그램 아이디는 그대로 남아요.</span></div>' +
         '<button type="button" class="st-ok" id="stOk">처음부터 다시 하기</button><button type="button" class="st-no" id="stNo">취소</button></div></div>');
@@ -1046,6 +1081,7 @@
   }
   /* "나 다시 받아주면 안될까?"에 대한 답: 받아주면(응 알겠어 / 보고싶어) true → 1번 엔딩 쪽, 거절하면(미안 안될거같다 / 헤어졌잖아) false → 2번 엔딩 */
   function kkAccept(t) {
+    if (window.I18N && window.I18N.logic) { return window.I18N.logic.accept(t); }
     var x = String(t || '').replace(/\s+/g, '');
     if (/안(될|돼|되|받|만나|할)|못(받|만나|돌아|해)|무리|아닌것|헤어졌|끝났|이미끝|싫|아니|아냐|ㄴㄴ|그만|거절|돌아갈수없|힘들|어려울|어렵/.test(x)) { return false; }
     if (/응|웅|ㅇㅇ|알겠|알았|그래|보고싶|좋|사랑|다시|만나|고마|ㅇㅋ|오케|당연|받아줄|받아줘|받아줄게|ㅎㅎ|♡|❤/.test(x)) { return true; }
@@ -1054,6 +1090,7 @@
   }
   /* "너 진짜 나랑 이렇게 끝낼 거야?"에 대한 답: 끝내는 데 동조하면 false(이별), 반대하거나 애정 표현이면 true(재회) */
   function kkKeep(t) {
+    if (window.I18N && window.I18N.logic) { return window.I18N.logic.keep(t); }
     var x = String(t || '').replace(/\s+/g, '');
     if (/보고싶지(않|안)|안보고싶|사랑(안|하지않)|좋아하지않|정떨어|질렸/.test(x)) { return false; }
     if (/(끝내|헤어지|그만두|그만하|이별하)\S*(기)?(싫|않|안)|끝낼수없|끝(내|나)지(말|마)|안끝|못끝|못헤어/.test(x)) { return true; }
@@ -1065,6 +1102,7 @@
   }
   /* "난 진짜 너 위해서" 뒤의 답: 사과/긍정/애정 표현 또는 말줄임표면 false(버전 2), 그 밖의 답은 한 글자여도 true(버전 4) */
   function kkHarsh(t) {
+    if (window.I18N && window.I18N.logic) { return window.I18N.logic.harsh(t); }
     var raw = String(t || '');
     if (/\.{2,}|…/.test(raw)) { return false; }
     if (/[?？]/.test(raw)) { return true; }
@@ -1259,7 +1297,7 @@
   function kkUiLive() { return kkUI && kkUI.layer && kkUI.layer.isConnected ? kkUI : null; }
   function kkPush(name, from, text) {
     var K = C.KAKAO; if (!K || !K.ROOMS[name]) { return null; }
-    var g = { d: KK_DATE, t: clockHHMM(), from: from, text: text };
+    var g = { d: KK_DATE, t: clockHHMM(), from: from, text: tr(text) };
     K.ROOMS[name].msgs.push(g);
     return g;
   }
@@ -1593,6 +1631,7 @@
         startAuto = function () {
           var stp = KK_SCRIPT[name][st.step];
           if (st.blocked || typing || !stp || !stp.auto || inp.value || !v.isConnected) { return; }
+          if (window.I18N && !window.I18N.isKo) { inp.blur(); inp.value = tr(stp.auto); syncSend(); return; }
           inp.blur();
           var steps = hgSteps(stp.auto), i = 0; typing = true; syncSend();
           kbShow();

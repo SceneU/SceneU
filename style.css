@@ -957,3 +957,9 @@ svg{display:block}
 .kr-in .fld{min-width:0}
 .kr-in .fld textarea{width:0}
 .kr-in{overflow:hidden}
+
+/* 언어 선택 */
+.langbar{display:flex;justify-content:center;gap:6px;margin:0 0 16px;flex-wrap:wrap}
+.langbar .lg{border:0;border-radius:14px;padding:6px 11px;font-size:12.5px;background:#f8e6f0;color:#a07a95;cursor:pointer;font-family:inherit}
+.langbar .lg.on{background:#f06fb4;color:#fff;font-weight:600}
+.st-sheet .st-ok[data-lang]{color:#007aff;margin-top:0;border-radius:0;border-top:.5px solid rgba(0,0,0,.12)}
